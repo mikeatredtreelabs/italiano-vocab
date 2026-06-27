@@ -3,7 +3,7 @@
    Network-first for shell, cache-first for pack files
    ═══════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'sengeri-v7';
+const CACHE_NAME = 'sengeri-v8';
 
 const SHELL_FILES = [
   './app.html',
