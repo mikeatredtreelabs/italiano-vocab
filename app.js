@@ -639,13 +639,11 @@ function renderFlash(app) {
       </div>
     </div>
 
-    ${flipped ? `
     <div class="rating-row">
-      <button class="rate-btn hard" onclick="rateCard(0)">😓 Hard</button>
-      <button class="rate-btn good" onclick="rateCard(1)">🙂 Good</button>
-      <button class="rate-btn easy" onclick="rateCard(2)">😄 Easy</button>
+      <button class="rate-btn hard ${flipped ? '' : 'pre-flip'}" onclick="${flipped ? 'rateCard(0)' : 'flipCard()'}">😓 Hard</button>
+      <button class="rate-btn good ${flipped ? '' : 'pre-flip'}" onclick="${flipped ? 'rateCard(1)' : 'flipCard()'}">🙂 Good</button>
+      <button class="rate-btn easy ${flipped ? '' : 'pre-flip'}" onclick="${flipped ? 'rateCard(2)' : 'flipCard()'}">😄 Easy</button>
     </div>
-    ` : `<div class="rating-row-placeholder"></div>`}
 
     <div class="session-footer">
       <label class="toggle-row">
@@ -656,7 +654,6 @@ function renderFlash(app) {
         <input type="checkbox" ${state.settings.ipa ? 'checked' : ''} onchange="toggleIPA(this.checked)">
         <span>Show IPA</span>
       </label>
-    </div>
   `;
 
   if (state.settings.autoSpeak) speak(word.it);
