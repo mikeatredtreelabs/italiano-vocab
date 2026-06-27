@@ -373,8 +373,10 @@
       <button class="ctrl-btn" id="prevBtn" aria-label="Previous">&#8249;</button>
       <div class="dots" id="dots"></div>
       <button class="ctrl-btn" id="nextBtn" aria-label="Next">&#8250;</button>
+      <button class="ctrl-btn" id="soundBtn" title="Mute narration" style="font-size:18px;border-color:var(--accent);color:var(--accent)">🔊</button>
     </div>
     <p class="scene-caption" id="sceneLabel">Home screen</p>
+    <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:4px">Tap 🔊 then use arrows — narration plays on each scene</p>
 
     <!-- Feature list -->
     <div class="section-title">Everything in the app</div>
@@ -404,16 +406,74 @@
     if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
 
     const scenes = [
-      {id:'s0', label:'Home screen'},
-      {id:'s1', label:'Flashcard — front (buttons dimmed)'},
-      {id:'s2', label:'Flashcard — flipped (rate it)'},
-      {id:'s3', label:'Quiz mode'},
-      {id:'s4', label:'Spritzi speed game'},
-      {id:'s5', label:'Progress & weak words'},
-      {id:'s6', label:'Settings sheet'},
+      {
+        id:'s0', label:'Home screen',
+        narration:"Welcome to Sengeri — your Italian vocabulary trainer. The home screen shows your daily streak, XP, and a Word of the Day. Choose from six study modes, or tap any of the twenty vocabulary packs to get started."
+      },
+      {
+        id:'s1', label:'Flashcard — front',
+        narration:"Flashcard mode shows you the Italian word first. The Hard, Good, and Easy buttons are visible but dimmed — tap the card, or any button, to reveal the answer."
+      },
+      {
+        id:'s2', label:'Flashcard — flipped',
+        narration:"After flipping, you see the English meaning, an example sentence, and for verbs, a Conjugate button with full tense tables. Rate the card Hard, Good, or Easy — Sengeri uses spaced repetition to show difficult words more often."
+      },
+      {
+        id:'s3', label:'Quiz mode',
+        narration:"Quiz mode shows the Italian word and four English choices. Smart distractors come from the same pack so the wrong answers feel plausible. Your score updates in real time."
+      },
+      {
+        id:'s4', label:'Spritzi speed game',
+        narration:"Spritzi is the speed game. You have fifteen seconds per word, three lives, and a live streak counter. Answer fast — the timer bar drains in real time. Hit a five-word streak and confetti fires."
+      },
+      {
+        id:'s5', label:'Progress & weak words',
+        narration:"The Progress tab tracks your streak, XP, words seen, and words mastered. The Weak Words list shows which words you miss most, ranked by error count. Tap any word to study it, or hit Practice Weak Words for a focused session."
+      },
+      {
+        id:'s6', label:'Settings sheet',
+        narration:"Tap Sengeri in the top left to open the settings sheet. From here you can watch this demo, see what is new, switch between dark and light mode, force refresh the app, or reset your progress."
+      },
     ];
+
     let cur = 0;
     let autoTimer = null;
+    let soundOn = true;
+    let ttsVoice = null;
+
+    // Init TTS voices
+    function initVoices() {
+      const set = () => {
+        const voices = speechSynthesis.getVoices();
+        ttsVoice = voices.find(v => v.lang.startsWith('en-US') && v.name.includes('Female'))
+                || voices.find(v => v.lang.startsWith('en'))
+                || null;
+      };
+      set();
+      speechSynthesis.onvoiceschanged = set;
+    }
+    initVoices();
+
+    function narrate(text) {
+      if (!soundOn || !window.speechSynthesis) return;
+      speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'en-US';
+      utt.rate = 0.95;
+      utt.pitch = 1.0;
+      if (ttsVoice) utt.voice = ttsVoice;
+      speechSynthesis.speak(utt);
+    }
+
+    // Sound toggle button
+    const soundBtn = document.getElementById('soundBtn');
+    soundBtn.onclick = () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? '🔊' : '🔇';
+      soundBtn.title = soundOn ? 'Mute narration' : 'Unmute narration';
+      if (!soundOn) speechSynthesis.cancel();
+      else narrate(scenes[cur].narration);
+    };
 
     const dotsEl = document.getElementById('dots');
     scenes.forEach((_, i) => {
@@ -432,6 +492,7 @@
       document.getElementById('sceneLabel').textContent = scenes[cur].label;
       onEnter(cur);
       resetAuto();
+      narrate(scenes[cur].narration);
     }
 
     function onEnter(n) {
@@ -459,11 +520,24 @@
 
     function resetAuto() {
       clearInterval(autoTimer);
-      autoTimer = setInterval(() => goTo(cur + 1), 4000);
+      autoTimer = setInterval(() => goTo(cur + 1), 7000);
     }
 
     document.getElementById('prevBtn').onclick = () => goTo(cur - 1);
     document.getElementById('nextBtn').onclick = () => goTo(cur + 1);
+
+    // Start — narration needs a user gesture on iOS, so we wait for first interaction
+    let started = false;
+    function start() {
+      if (started) return;
+      started = true;
+      narrate(scenes[0].narration);
+      resetAuto();
+    }
+    document.getElementById('prevBtn').addEventListener('click', start, {once:true});
+    document.getElementById('nextBtn').addEventListener('click', start, {once:true});
+    document.getElementById('soundBtn').addEventListener('click', start, {once:true});
+    dotsEl.addEventListener('click', start, {once:true});
     resetAuto();
   </script>
 </body>
