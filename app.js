@@ -1,9 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════
-   Sengeri — Italian Vocab Trainer  v2.0
+   Sengeri — Italian Vocab Trainer
    app.js
    ═══════════════════════════════════════════════════════════════ */
 
 'use strict';
+
+/* ── Version ─────────────────────────────────────────────────── */
+const APP_VERSION = '2.0.1';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -1580,7 +1583,7 @@ function showAboutSheet() {
       </div>
 
       <div class="about-version-row">
-        <span class="about-version-badge">v2.0</span>
+        <span class="about-version-badge">v${APP_VERSION}</span>
         <span class="about-version-date">June 2026</span>
       </div>
 
@@ -1607,7 +1610,7 @@ function showAboutSheet() {
       <div class="about-menu">
         <a href="whats-new.html" class="about-row">
           <span class="about-row-icon">✨</span>
-          <span class="about-row-label">What's New in v2.0</span>
+          <span class="about-row-label">What's New in v${APP_VERSION}</span>
           <span class="about-row-arrow">›</span>
         </a>
         <div class="about-row" onclick="toggleThemeFromSheet(this)">
