@@ -1695,15 +1695,21 @@ function toggleAutoSpeakFromSheet(row) {
 }
 
 async function hardRefresh() {
-  if ('caches' in window) {
-    const keys = await caches.keys();
-    await Promise.all(keys.map(k => caches.delete(k)));
-  }
-  if ('serviceWorker' in navigator) {
-    const regs = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(regs.map(r => r.unregister()));
-  }
-  window.location.reload(true);
+  showToast('Clearing cache…');
+  try {
+    // 1. Unregister all service workers
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    // 2. Delete all caches
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch(e) {}
+  // 3. Redirect with cache-bust param so browser fetches fresh HTML
+  window.location.href = window.location.pathname + '?v=' + Date.now();
 }
 
 function confirmResetProgress() {
