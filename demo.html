@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Demo · Sengeri</title>
+  <meta name="theme-color" content="#0f0e17" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    :root {
+      --bg:#0f0e17; --surface:#1a1927; --surface2:#242338; --border:#2e2c45;
+      --accent:#e63946; --accent2:#ff6b6b; --gold:#f4a261; --green:#2ec4b6;
+      --blue:#4361ee; --text:#fffffe; --muted:#a7a5c0; --radius:14px;
+    }
+    [data-theme="light"] {
+      --bg:#f8f7ff; --surface:#ffffff; --surface2:#f0effe;
+      --border:#dddaf5; --text:#0f0e17; --muted:#6e6c88;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:calc(env(safe-area-inset-bottom)+24px)}
+    .site-header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top)+12px) 20px 12px;display:flex;align-items:center;gap:12px}
+    .back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--accent);font-size:15px;font-weight:600;cursor:pointer;padding:6px 0;text-decoration:none;min-height:44px}
+    .header-title{font-size:17px;font-weight:700;letter-spacing:-0.3px}
+    .content{max-width:520px;margin:0 auto;padding:24px 16px}
+    .hero{text-align:center;padding:32px 0 28px}
+    .hero h1{font-size:clamp(22px,5vw,30px);font-weight:800;letter-spacing:-0.8px;margin-bottom:8px}
+    .hero h1 span{color:var(--accent)}
+    .hero p{font-size:14px;color:var(--muted);max-width:320px;margin:0 auto;line-height:1.55}
+
+    /* Phone frame */
+    .phone-wrap{display:flex;justify-content:center;margin:8px 0 24px}
+    .phone{width:260px;height:520px;background:#0f0e17;border-radius:34px;border:6px solid #2a2940;position:relative;overflow:hidden;flex-shrink:0;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+    .phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:72px;height:18px;background:#2a2940;border-radius:0 0 10px 10px;z-index:10}
+    .scene{position:absolute;inset:0;padding:26px 13px 10px;display:flex;flex-direction:column;opacity:0;transition:opacity .4s;pointer-events:none}
+    .scene.active{opacity:1;pointer-events:all}
+
+    /* Shared phone UI */
+    .tab-bar{position:absolute;bottom:0;left:0;right:0;height:50px;background:#1a1927;border-top:1px solid #2e2c45;display:flex;align-items:center}
+    .tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8px;color:#a7a5c0;padding:5px 0}
+    .tab-btn.act{color:#e63946}
+    .tab-icon{font-size:15px;line-height:1}
+    .game-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+    .back-s{color:#e63946;font-size:10px;font-weight:600}
+    .prog-txt{font-size:9px;color:#a7a5c0}
+    .prog-bar{height:3px;background:#2e2c45;border-radius:3px;margin-bottom:12px;overflow:hidden}
+    .prog-fill{height:100%;background:#e63946;border-radius:3px;transition:width 1s ease}
+
+    /* Home scene */
+    .home-logo{font-size:14px;font-weight:800;display:flex;align-items:center;gap:5px}
+    .home-logo em{color:#e63946;font-style:normal}
+    .stats-row{display:flex;gap:5px;margin-bottom:10px}
+    .stat-pill{background:#1a1927;border:1px solid #2e2c45;border-radius:999px;padding:3px 9px;font-size:9px;display:flex;gap:3px;align-items:center;color:#fffffe}
+    .stat-n{font-weight:800;color:#e63946}
+    .wotd{background:#1a1927;border:1px solid #2e2c45;border-radius:9px;padding:9px 11px;margin-bottom:9px}
+    .wotd-lbl{font-size:8px;color:#a7a5c0;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+    .wotd-it{font-size:18px;font-weight:800;margin-bottom:2px;color:#fffffe}
+    .wotd-en{font-size:10px;color:#a7a5c0}
+    .sec-lbl{font-size:8px;color:#a7a5c0;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;font-weight:700}
+    .mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}
+    .mode-card{background:#1a1927;border:1px solid #2e2c45;border-radius:9px;padding:7px 3px;text-align:center}
+    .mode-icon{font-size:17px;line-height:1;margin-bottom:2px}
+    .mode-name{font-size:8px;font-weight:600;color:#fffffe}
+    .mode-sub{font-size:7px;color:#a7a5c0}
+
+    /* Flash */
+    .flash-card{background:#1a1927;border:1px solid #2e2c45;border-radius:14px;padding:20px 14px;text-align:center;margin-bottom:12px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+    .flash-it{font-size:26px;font-weight:800;letter-spacing:-1px;color:#fffffe}
+    .flash-ipa{font-size:10px;color:#a7a5c0}
+    .flash-tap{font-size:9px;color:#a7a5c0;margin-top:3px}
+    .flash-en{font-size:18px;font-weight:700;color:#fffffe}
+    .flash-ex{font-size:9px;color:#a7a5c0;font-style:italic;margin-top:3px;text-align:center}
+    .rate-row{display:flex;gap:6px;margin-bottom:7px}
+    .rate-btn{flex:1;padding:8px 2px;border-radius:9px;font-size:10px;font-weight:700;border:1px solid;background:none;cursor:pointer}
+    .rate-hard{border-color:rgba(230,57,70,.3);color:#e63946;background:rgba(230,57,70,.1)}
+    .rate-good{border-color:rgba(244,162,97,.3);color:#f4a261;background:rgba(244,162,97,.1)}
+    .rate-easy{border-color:rgba(46,196,182,.3);color:#2ec4b6;background:rgba(46,196,182,.1)}
+    .rate-btn.dim{opacity:.3}
+
+    /* Quiz */
+    .quiz-word{background:#1a1927;border:1px solid #2e2c45;border-radius:12px;padding:18px;text-align:center;margin-bottom:10px}
+    .quiz-it{font-size:22px;font-weight:800;margin-bottom:3px;color:#fffffe}
+    .quiz-ipa{font-size:9px;color:#a7a5c0}
+    .quiz-opts{display:flex;flex-direction:column;gap:5px}
+    .qopt{background:#1a1927;border:1px solid #2e2c45;border-radius:9px;padding:9px 11px;font-size:11px;cursor:pointer;transition:all .3s;color:#fffffe}
+    .qopt.correct{background:rgba(46,196,182,.15);border-color:#2ec4b6;color:#2ec4b6}
+    .qopt.wrong{background:rgba(230,57,70,.15);border-color:#e63946;color:#e63946}
+
+    /* Spritzi */
+    .spr-timer-bar{height:4px;background:#2e2c45;border-radius:4px;margin-bottom:8px;overflow:hidden}
+    .spr-timer-fill{height:100%;background:#f4a261;border-radius:4px;transition:width .5s linear}
+    .spr-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+    .spr-lives{font-size:12px;letter-spacing:2px}
+    .spr-score-txt{font-size:10px;font-weight:600;color:#fffffe}
+    .spr-word{background:#1a1927;border:1px solid #2e2c45;border-radius:11px;padding:14px;text-align:center;margin-bottom:9px}
+    .spr-it{font-size:20px;font-weight:800;color:#fffffe}
+    .spr-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+    .sopt{background:#1a1927;border:1px solid #2e2c45;border-radius:9px;padding:9px 5px;font-size:10px;font-weight:500;text-align:center;cursor:pointer;transition:all .3s;color:#fffffe}
+    .sopt.correct{background:rgba(46,196,182,.15);border-color:#2ec4b6;color:#2ec4b6}
+
+    /* Progress */
+    .prog-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
+    .pstat{background:#1a1927;border:1px solid #2e2c45;border-radius:9px;padding:7px 3px;text-align:center}
+    .pstat-n{font-size:14px;font-weight:800;color:#e63946}
+    .pstat-l{font-size:7px;color:#a7a5c0;margin-top:2px}
+    .weak-row{background:#1a1927;border:1px solid #2e2c45;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+    .weak-it{font-size:11px;font-weight:700;color:#fffffe}
+    .weak-en{font-size:8px;color:#a7a5c0}
+    .weak-err{font-size:10px;font-weight:700;color:#e63946}
+    .pack-bar-row{background:#1a1927;border:1px solid #2e2c45;border-radius:7px;padding:7px 9px;margin-bottom:4px;display:flex;align-items:center;gap:7px}
+    .pack-bar-emoji{font-size:13px}
+    .pack-bar-info{flex:1}
+    .pack-bar-name{font-size:9px;font-weight:600;margin-bottom:3px;color:#fffffe}
+    .pack-bar-wrap{height:4px;background:#2e2c45;border-radius:4px;overflow:hidden}
+    .pack-bar-fill{height:100%;background:#e63946;border-radius:4px;transition:width 1.2s ease}
+    .pack-bar-pct{font-size:9px;font-weight:700;color:#e63946;min-width:24px;text-align:right}
+
+    /* About sheet */
+    .about-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end}
+    .about-sheet{background:#1a1927;border-radius:14px 14px 0 0;width:100%;padding:14px 13px 18px}
+    .about-sh-hdr{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+    .about-sh-title{font-size:13px;font-weight:800;color:#fffffe}
+    .about-sh-sub{font-size:9px;color:#a7a5c0}
+    .about-badge{background:#e63946;color:white;font-size:8px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:auto}
+    .about-row-s{display:flex;align-items:center;gap:7px;padding:7px 9px;background:#242338;border-radius:7px;margin-bottom:4px;font-size:10px;color:#fffffe}
+    .about-row-icon{font-size:13px;width:18px;text-align:center}
+    .about-row-val{font-size:9px;color:#a7a5c0;margin-left:auto}
+
+    /* Controls */
+    .controls{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:8px}
+    .ctrl-btn{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:.5px solid var(--border);background:var(--surface);cursor:pointer;color:var(--text);transition:background .15s;font-size:16px}
+    .ctrl-btn:hover{background:var(--surface2)}
+    .ctrl-btn:active{transform:scale(.95)}
+    .dots{display:flex;gap:7px}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--border);cursor:pointer;transition:background .2s}
+    .dot.act{background:var(--accent)}
+    .scene-caption{text-align:center;font-size:13px;color:var(--muted);min-height:20px}
+
+    /* Feature list */
+    .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+    .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 14px 12px;position:relative;overflow:hidden}
+    .feature-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px}
+    .feature-icon{font-size:22px;margin-bottom:6px}
+    .feature-title{font-size:13px;font-weight:700;margin-bottom:3px}
+    .feature-desc{font-size:11px;color:var(--muted);line-height:1.5}
+    .cta-section{text-align:center;padding:28px 0 8px}
+    .cta-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:white;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none;transition:opacity .15s}
+    .cta-btn:active{opacity:.85}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:24px 0 12px}
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a href="app.html" class="back-btn">
+      <i class="ti ti-chevron-left" style="font-size:18px"></i>
+      Back to App
+    </a>
+    <span class="header-title">App Demo</span>
+  </header>
+
+  <main class="content">
+    <div class="hero">
+      <div style="font-size:48px;margin-bottom:12px">🇮🇹</div>
+      <h1>See <span>Sengeri</span> in action</h1>
+      <p>Tap the arrows to walk through every feature — flashcards, quiz, speed game, progress tracking, and more.</p>
+    </div>
+
+    <!-- Phone + controls -->
+    <div class="phone-wrap">
+      <div class="phone" id="phone">
+        <div class="phone-notch"></div>
+
+        <!-- S0: Home -->
+        <div class="scene active" id="s0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="home-logo">🇮🇹 <em>Sengeri</em> <span style="font-size:10px;color:#a7a5c0;font-weight:400">›</span></div>
+            <span style="font-size:15px">☀️</span>
+          </div>
+          <div class="stats-row">
+            <div class="stat-pill"><span class="stat-n">7</span><span>🔥 streak</span></div>
+            <div class="stat-pill"><span class="stat-n">340</span><span>⭐ XP</span></div>
+            <div class="stat-pill"><span class="stat-n">82</span><span>📚 seen</span></div>
+          </div>
+          <div class="wotd">
+            <div class="wotd-lbl">Word of the Day</div>
+            <div class="wotd-it">camminare</div>
+            <div class="wotd-en">to walk &nbsp;[kam.miˈna.re]</div>
+          </div>
+          <div class="sec-lbl">Study Modes</div>
+          <div class="mode-grid">
+            <div class="mode-card"><div class="mode-icon">🃏</div><div class="mode-name">Flashcards</div><div class="mode-sub">Flip & rate</div></div>
+            <div class="mode-card"><div class="mode-icon">🧠</div><div class="mode-name">Quiz</div><div class="mode-sub">4-choice MCQ</div></div>
+            <div class="mode-card"><div class="mode-icon">⚡</div><div class="mode-name">Spritzi</div><div class="mode-sub">Speed game</div></div>
+            <div class="mode-card"><div class="mode-icon">👂</div><div class="mode-name">Listening</div><div class="mode-sub">Hear & identify</div></div>
+            <div class="mode-card"><div class="mode-icon">📝</div><div class="mode-name">Sentences</div><div class="mode-sub">Fill-in-blank</div></div>
+            <div class="mode-card"><div class="mode-icon">🎤</div><div class="mode-name">Speak</div><div class="mode-sub">Pronunciation</div></div>
+          </div>
+          <div class="tab-bar">
+            <div class="tab-btn act"><div class="tab-icon">🏠</div><span>Home</span></div>
+            <div class="tab-btn"><div class="tab-icon">🃏</div><span>Flash</span></div>
+            <div class="tab-btn"><div class="tab-icon">🧠</div><span>Quiz</span></div>
+            <div class="tab-btn"><div class="tab-icon">⚡</div><span>Spritzi</span></div>
+            <div class="tab-btn"><div class="tab-icon">📈</div><span>Progress</span></div>
+          </div>
+        </div>
+
+        <!-- S1: Flash front -->
+        <div class="scene" id="s1">
+          <div class="game-hdr">
+            <span class="back-s">← Everyday Verbs</span>
+            <span class="prog-txt">4 / 20</span>
+            <span style="font-size:13px">🔊</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" style="width:20%"></div></div>
+          <div class="flash-card">
+            <div class="flash-it">trovare</div>
+            <div class="flash-ipa">[troˈva.re]</div>
+            <div class="flash-tap">tap to reveal</div>
+          </div>
+          <div class="rate-row">
+            <button class="rate-btn rate-hard dim">😓 Hard</button>
+            <button class="rate-btn rate-good dim">🙂 Good</button>
+            <button class="rate-btn rate-easy dim">😄 Easy</button>
+          </div>
+          <div class="tab-bar">
+            <div class="tab-btn"><div class="tab-icon">🏠</div><span>Home</span></div>
+            <div class="tab-btn act"><div class="tab-icon">🃏</div><span>Flash</span></div>
+            <div class="tab-btn"><div class="tab-icon">🧠</div><span>Quiz</span></div>
+            <div class="tab-btn"><div class="tab-icon">⚡</div><span>Spritzi</span></div>
+            <div class="tab-btn"><div class="tab-icon">📈</div><span>Progress</span></div>
+          </div>
+        </div>
+
+        <!-- S2: Flash flipped -->
+        <div class="scene" id="s2">
+          <div class="game-hdr">
+            <span class="back-s">← Everyday Verbs</span>
+            <span class="prog-txt">4 / 20</span>
+            <span style="font-size:13px">🔊</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" style="width:20%"></div></div>
+          <div class="flash-card" style="background:#1e2e2c;border-color:#2ec4b6">
+            <div class="flash-en">to find</div>
+            <div class="flash-ex">"Devo trovare le chiavi."<br><span style="font-style:normal">"I have to find the keys."</span></div>
+            <button style="margin-top:6px;background:rgba(67,97,238,.12);color:#7b96f7;border:1px solid rgba(67,97,238,.25);border-radius:7px;padding:4px 10px;font-size:9px;font-weight:600">📋 Conjugate trovare</button>
+          </div>
+          <div class="rate-row">
+            <button class="rate-btn rate-hard">😓 Hard</button>
+            <button class="rate-btn rate-good">🙂 Good</button>
+            <button class="rate-btn rate-easy">😄 Easy</button>
+          </div>
+          <div class="tab-bar">
+            <div class="tab-btn"><div class="tab-icon">🏠</div><span>Home</span></div>
+            <div class="tab-btn act"><div class="tab-icon">🃏</div><span>Flash</span></div>
+            <div class="tab-btn"><div class="tab-icon">🧠</div><span>Quiz</span></div>
+            <div class="tab-btn"><div class="tab-icon">⚡</div><span>Spritzi</span></div>
+            <div class="tab-btn"><div class="tab-icon">📈</div><span>Progress</span></div>
+          </div>
+        </div>
+
+        <!-- S3: Quiz -->
+        <div class="scene" id="s3">
+          <div class="game-hdr">
+            <span class="back-s">← At the Restaurant</span>
+            <span class="prog-txt">7 / 20</span>
+            <span style="font-size:10px;font-weight:600">⭐ 6/7</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" style="width:35%"></div></div>
+          <div class="quiz-word">
+            <div class="quiz-it">il conto</div>
+            <div class="quiz-ipa">[il ˈkon.to]</div>
+          </div>
+          <div class="quiz-opts">
+            <div class="qopt">the reservation</div>
+            <div class="qopt correct">the bill / check</div>
+            <div class="qopt">the menu</div>
+            <div class="qopt">the waiter</div>
+          </div>
+          <div class="tab-bar">
+            <div class="tab-btn"><div class="tab-icon">🏠</div><span>Home</span></div>
+            <div class="tab-btn"><div class="tab-icon">🃏</div><span>Flash</span></div>
+            <div class="tab-btn act"><div class="tab-icon">🧠</div><span>Quiz</span></div>
+            <div class="tab-btn"><div class="tab-icon">⚡</div><span>Spritzi</span></div>
+            <div class="tab-btn"><div class="tab-icon">📈</div><span>Progress</span></div>
+          </div>
+        </div>
+
+        <!-- S4: Spritzi -->
+        <div class="scene" id="s4">
+          <div class="spr-hdr">
+            <span class="back-s">✕</span>
+            <span class="spr-lives">❤️❤️❤️</span>
+            <span class="spr-score-txt">⭐ 12 | 🔥 5</span>
+          </div>
+          <div class="spr-timer-bar"><div class="spr-timer-fill" id="stf" style="width:65%"></div></div>
+          <div class="spr-word">
+            <div class="spr-it">la farfalla</div>
+            <div style="font-size:9px;color:#a7a5c0">[la farˈfal.la]</div>
+          </div>
+          <div class="spr-grid">
+            <div class="sopt">the flower</div>
+            <div class="sopt correct">the butterfly</div>
+            <div class="sopt">the garden</div>
+            <div class="sopt">the bird</div>
+            <div class="sopt">the insect</div>
+          </div>
+          <div class="tab-bar">
+            <div class="tab-btn"><div class="tab-icon">🏠</div><span>Home</span></div>
+            <div class="tab-btn"><div class="tab-icon">🃏</div><span>Flash</span></div>
+            <div class="tab-btn"><div class="tab-icon">🧠</div><span>Quiz</span></div>
+            <div class="tab-btn act"><div class="tab-icon">⚡</div><span>Spritzi</span></div>
+            <div class="tab-btn"><div class="tab-icon">📈</div><span>Progress</span></div>
+          </div>
+        </div>
+
+        <!-- S5: Progress -->
+        <div class="scene" id="s5">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+            <span style="font-size:13px;font-weight:700">Progress</span>
+            <span style="font-size:15px">☀️</span>
+          </div>
+          <div class="prog-stats">
+            <div class="pstat"><div class="pstat-n">7</div><div class="pstat-l">🔥 Streak</div></div>
+            <div class="pstat"><div class="pstat-n">340</div><div class="pstat-l">⭐ XP</div></div>
+            <div class="pstat"><div class="pstat-n">82</div><div class="pstat-l">📚 Seen</div></div>
+            <div class="pstat"><div class="pstat-n">34</div><div class="pstat-l">✅ Done</div></div>
+          </div>
+          <div class="sec-lbl">❌ Weak Words</div>
+          <div class="weak-row"><div><div class="weak-it">scegliere</div><div class="weak-en">to choose</div></div><div class="weak-err">5 ✗</div></div>
+          <div class="weak-row"><div><div class="weak-it">la farfalla</div><div class="weak-en">the butterfly</div></div><div class="weak-err">3 ✗</div></div>
+          <div class="sec-lbl" style="margin-top:8px">Pack Mastery</div>
+          <div class="pack-bar-row"><span class="pack-bar-emoji">👋</span><div class="pack-bar-info"><div class="pack-bar-name">Greetings</div><div class="pack-bar-wrap"><div class="pack-bar-fill" id="pb1" style="width:0%"></div></div></div><span class="pack-bar-pct">72%</span></div>
+          <div class="pack-bar-row"><span class="pack-bar-emoji">🍝</span><div class="pack-bar-info"><div class="pack-bar-name">Restaurant</div><div class="pack-bar-wrap"><div class="pack-bar-fill" id="pb2" style="width:0%"></div></div></div><span class="pack-bar-pct">48%</span></div>
+          <div class="tab-bar">
+            <div class="tab-btn"><div class="tab-icon">🏠</div><span>Home</span></div>
+            <div class="tab-btn"><div class="tab-icon">🃏</div><span>Flash</span></div>
+            <div class="tab-btn"><div class="tab-icon">🧠</div><span>Quiz</span></div>
+            <div class="tab-btn"><div class="tab-icon">⚡</div><span>Spritzi</span></div>
+            <div class="tab-btn act"><div class="tab-icon">📈</div><span>Progress</span></div>
+          </div>
+        </div>
+
+        <!-- S6: Settings sheet -->
+        <div class="scene" id="s6">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="home-logo">🇮🇹 <em>Sengeri</em> <span style="font-size:10px;color:#a7a5c0;font-weight:400">›</span></div>
+            <span style="font-size:15px">☀️</span>
+          </div>
+          <div class="stats-row">
+            <div class="stat-pill"><span class="stat-n">7</span><span>🔥 streak</span></div>
+            <div class="stat-pill"><span class="stat-n">340</span><span>⭐ XP</span></div>
+          </div>
+          <div class="about-overlay">
+            <div class="about-sheet">
+              <div class="about-sh-hdr">
+                <span style="font-size:19px">🇮🇹</span>
+                <div><div class="about-sh-title">Sengeri</div><div class="about-sh-sub">Italian Vocabulary Trainer</div></div>
+                <div class="about-badge">v2.0.5</div>
+              </div>
+              <div class="about-row-s"><span class="about-row-icon">▶️</span><span>App Demo</span><span class="about-row-val">See how it works</span></div>
+              <div class="about-row-s"><span class="about-row-icon">✨</span><span>What's New in v2.0.5</span><span style="margin-left:auto;font-size:9px;color:#a7a5c0">›</span></div>
+              <div class="about-row-s"><span class="about-row-icon">🌙</span><span>Appearance</span><span class="about-row-val">Dark</span></div>
+              <div class="about-row-s"><span class="about-row-icon">🔄</span><span>Force Refresh</span><span class="about-row-val">Clears cache</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn" id="prevBtn" aria-label="Previous">&#8249;</button>
+      <div class="dots" id="dots"></div>
+      <button class="ctrl-btn" id="nextBtn" aria-label="Next">&#8250;</button>
+    </div>
+    <p class="scene-caption" id="sceneLabel">Home screen</p>
+
+    <!-- Feature list -->
+    <div class="section-title">Everything in the app</div>
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-icon">🃏</div><div class="feature-title">Flashcards</div><div class="feature-desc">Flip & rate with spaced repetition</div></div>
+      <div class="feature-card"><div class="feature-icon">🧠</div><div class="feature-title">Quiz</div><div class="feature-desc">4-choice multiple choice</div></div>
+      <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-title">Spritzi</div><div class="feature-desc">Speed game with lives & streaks</div></div>
+      <div class="feature-card"><div class="feature-icon">👂</div><div class="feature-title">Listening</div><div class="feature-desc">Hear Italian, identify meaning</div></div>
+      <div class="feature-card"><div class="feature-icon">📝</div><div class="feature-title">Sentences</div><div class="feature-desc">Fill-in-the-blank cloze mode</div></div>
+      <div class="feature-card"><div class="feature-icon">🎤</div><div class="feature-title">Speak</div><div class="feature-desc">Pronunciation with mic scoring</div></div>
+      <div class="feature-card"><div class="feature-icon">📅</div><div class="feature-title">Daily Review</div><div class="feature-desc">Smart queue of due words</div></div>
+      <div class="feature-card"><div class="feature-icon">❌</div><div class="feature-title">Weak Words</div><div class="feature-desc">Ranked by your error count</div></div>
+      <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Pack Mastery</div><div class="feature-desc">% mastered per vocabulary pack</div></div>
+      <div class="feature-card"><div class="feature-icon">🔡</div><div class="feature-title">Conjugations</div><div class="feature-desc">Full tables for 53 verbs</div></div>
+      <div class="feature-card"><div class="feature-icon">🔊</div><div class="feature-title">Italian TTS</div><div class="feature-desc">Native voice on every word</div></div>
+      <div class="feature-card"><div class="feature-icon">📱</div><div class="feature-title">Works Offline</div><div class="feature-desc">PWA — add to home screen</div></div>
+    </div>
+
+    <div class="cta-section">
+      <a href="app.html" class="cta-btn">Start Studying →</a>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px">Free · No account · 2,005 words · 20 packs</p>
+    </div>
+  </main>
+
+  <script>
+    const saved = localStorage.getItem('sengeri-theme');
+    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+
+    const scenes = [
+      {id:'s0', label:'Home screen'},
+      {id:'s1', label:'Flashcard — front (buttons dimmed)'},
+      {id:'s2', label:'Flashcard — flipped (rate it)'},
+      {id:'s3', label:'Quiz mode'},
+      {id:'s4', label:'Spritzi speed game'},
+      {id:'s5', label:'Progress & weak words'},
+      {id:'s6', label:'Settings sheet'},
+    ];
+    let cur = 0;
+    let autoTimer = null;
+
+    const dotsEl = document.getElementById('dots');
+    scenes.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' act' : '');
+      d.onclick = () => goTo(i);
+      dotsEl.appendChild(d);
+    });
+
+    function goTo(n) {
+      document.getElementById(scenes[cur].id).classList.remove('active');
+      dotsEl.children[cur].classList.remove('act');
+      cur = (n + scenes.length) % scenes.length;
+      document.getElementById(scenes[cur].id).classList.add('active');
+      dotsEl.children[cur].classList.add('act');
+      document.getElementById('sceneLabel').textContent = scenes[cur].label;
+      onEnter(cur);
+      resetAuto();
+    }
+
+    function onEnter(n) {
+      if (n === 5) {
+        setTimeout(() => {
+          const p1 = document.getElementById('pb1');
+          const p2 = document.getElementById('pb2');
+          if (p1) p1.style.width = '72%';
+          if (p2) p2.style.width = '48%';
+        }, 200);
+      }
+      if (n === 4) {
+        let w = 65;
+        clearInterval(window._st);
+        window._st = setInterval(() => {
+          w = Math.max(0, w - 3);
+          const el = document.getElementById('stf');
+          if (el) el.style.width = w + '%';
+          if (w <= 0) clearInterval(window._st);
+        }, 200);
+      } else {
+        clearInterval(window._st);
+      }
+    }
+
+    function resetAuto() {
+      clearInterval(autoTimer);
+      autoTimer = setInterval(() => goTo(cur + 1), 4000);
+    }
+
+    document.getElementById('prevBtn').onclick = () => goTo(cur - 1);
+    document.getElementById('nextBtn').onclick = () => goTo(cur + 1);
+    resetAuto();
+  </script>
+</body>
+</html>

@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.0.5';
+const APP_VERSION = '2.0.6';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -1675,6 +1675,11 @@ function showAboutSheet() {
 
       <div class="about-section-label">App</div>
       <div class="about-menu">
+        <a href="demo.html" class="about-row">
+          <span class="about-row-icon">▶️</span>
+          <span class="about-row-label">App Demo</span>
+          <span class="about-row-value muted">See how it works</span>
+        </a>
         <a href="whats-new.html" class="about-row">
           <span class="about-row-icon">✨</span>
           <span class="about-row-label">What's New in v${APP_VERSION}</span>
