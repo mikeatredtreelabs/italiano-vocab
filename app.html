@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Italiano — 2000 Words</title>
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- iOS / iPhone specific -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Italiano">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- Theme colour for browser chrome -->
+<meta name="theme-color" content="#0f0f13">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- Prevent phone number detection -->
+<meta name="format-detection" content="telephone=no">
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:          #0f0f13;
+    --surface:     #1a1a22;
+    --surface2:    #23232f;
+    --border:      #2e2e3e;
+    --accent:      #e8c468;   /* warm gold — italian sun */
+    --accent2:     #c45c3a;   /* terracotta */
+    --accent3:     #4ea8a0;   /* verdigris — aged bronze */
+    --text:        #eeeae0;
+    --text2:       #9996a0;
+    --text3:       #6b6878;
+    --green:       #5dbe8a;
+    --red:         #e06060;
+    --radius:      12px;
+    --radius-sm:   7px;
+    --font-display:'Georgia', serif;
+    --font-body:   system-ui, -apple-system, sans-serif;
+    --transition:  0.18s ease;
+  }
+  [data-theme="light"] {
+    --bg:       #f5f0e8;
+    --surface:  #fffdf7;
+    --surface2: #f0ebe0;
+    --border:   #ddd8cc;
+    --text:     #1a1812;
+    --text2:    #6b6050;
+    --text3:    #a09888;
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+  }
+  button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+  input  { font: inherit; color: inherit; }
+  a      { color: inherit; text-decoration: none; }
+
+  /* ── Layout shell ──────────────────────────────────────────────── */
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── Header ────────────────────────────────────────────────────── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .logo span { color: var(--text2); font-size: 0.8rem; font-family: var(--font-body); }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+  .icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    transition: background var(--transition);
+  }
+  .icon-btn:hover { background: var(--border); }
+
+  /* ── Stats bar ──────────────────────────────────────────────────── */
+  #stats-bar {
+    display: flex; gap: 0; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  #stats-bar::-webkit-scrollbar { display: none; }
+  .stat-pill {
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    font-size: 0.75rem; color: var(--text2);
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .stat-pill strong { color: var(--accent); font-size: 1rem; display: block; }
+
+  /* ── Screen management ─────────────────────────────────────────── */
+  .screen { display: none; flex: 1; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── HOME SCREEN ───────────────────────────────────────────────── */
+  #home-screen { padding: 20px; gap: 24px; }
+
+  /* Word of the day */
+  #wotd {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+  .wotd-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 6px; }
+  .wotd-it { font-family: var(--font-display); font-size: 1.8rem; color: var(--accent); }
+  .wotd-en { color: var(--text2); margin: 4px 0; }
+  .wotd-ipa { font-size: 0.8rem; color: var(--text3); }
+  .wotd-ex { font-style: italic; color: var(--text2); font-size: 0.85rem; margin-top: 8px; }
+
+  /* Pack grid */
+  .section-title {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text3); margin-bottom: 12px;
+  }
+  #pack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .pack-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    cursor: pointer;
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .pack-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 4px 16px rgba(232,196,104,0.12); }
+  .pack-card.loading { opacity: 0.6; pointer-events: none; }
+  .pack-emoji { font-size: 1.8rem; margin-bottom: 8px; }
+  .pack-name { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+  .pack-count { font-size: 0.72rem; color: var(--text3); }
+  .pack-progress-bar {
+    position: absolute; bottom: 0; left: 0; height: 3px;
+    background: var(--accent); transition: width 0.3s ease;
+  }
+  .pack-card.complete { border-color: var(--green); }
+  .pack-card.complete .pack-progress-bar { background: var(--green); }
+
+  /* Quick actions */
+  #quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .quick-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--transition);
+    font-size: 0.85rem;
+  }
+  .quick-btn:hover { border-color: var(--accent2); }
+  .quick-btn .btn-icon { font-size: 1.4rem; margin-bottom: 6px; }
+
+  /* ── PACK MENU SCREEN ──────────────────────────────────────────── */
+  #pack-menu-screen { padding: 20px; gap: 16px; }
+  .back-btn {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text2); font-size: 0.85rem;
+    width: fit-content; padding: 6px 0;
+  }
+  .back-btn:hover { color: var(--text); }
+  .pack-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .pack-hero .pack-emoji-lg { font-size: 3rem; margin-bottom: 8px; }
+  .pack-hero h2 { font-family: var(--font-display); font-size: 1.4rem; color: var(--accent); }
+  .pack-hero p { color: var(--text2); font-size: 0.85rem; margin-top: 4px; }
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mode-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition), transform var(--transition);
+  }
+  .mode-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .mode-icon { font-size: 1.5rem; margin-bottom: 8px; }
+  .mode-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+  .mode-desc { font-size: 0.75rem; color: var(--text2); }
+
+  /* ── FLASHCARD SCREEN ──────────────────────────────────────────── */
+  #flash-screen { padding: 0; align-items: stretch; position: relative; }
+
+  .game-header {
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .game-title { font-size: 0.85rem; font-weight: 600; }
+  .progress-info { font-size: 0.8rem; color: var(--text2); }
+
+  .progress-track {
+    height: 3px; background: var(--border); flex-shrink: 0;
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    transition: width 0.3s ease;
+  }
+
+  /* Flashcard */
+  #card-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 20px; perspective: 1000px;
+  }
+  .flashcard {
+    width: 100%; max-width: 420px;
+    min-height: 260px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+  .flashcard.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute; inset: 0;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    backface-visibility: hidden;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .card-back { transform: rotateY(180deg); }
+  .card-category {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text3); margin-bottom: 12px;
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 3px 10px;
+  }
+  .card-it {
+    font-family: var(--font-display);
+    font-size: 2.2rem; color: var(--accent);
+    margin-bottom: 8px; line-height: 1.2;
+  }
+  .card-ipa { font-size: 0.8rem; color: var(--text3); margin-bottom: 12px; }
+  .card-hint { font-size: 0.78rem; color: var(--text3); margin-top: 12px; }
+  .card-en { font-size: 1.35rem; color: var(--text); margin-bottom: 8px; }
+  .card-ex { font-style: italic; color: var(--text2); font-size: 0.85rem; }
+  .card-ex-en { font-size: 0.8rem; color: var(--text3); margin-top: 4px; }
+  .tts-btn {
+    margin-top: 14px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  .tts-btn:hover { background: var(--border); }
+
+  /* Card actions */
+  .card-actions {
+    display: flex; gap: 12px; padding: 16px 20px;
+    justify-content: center; flex-shrink: 0;
+  }
+  .card-actions.hidden { visibility: hidden; }
+  .action-btn {
+    flex: 1; max-width: 120px;
+    padding: 12px 8px;
+    border-radius: var(--radius);
+    font-size: 0.85rem; font-weight: 600;
+    border: 2px solid transparent;
+    transition: all var(--transition);
+  }
+  .btn-again { background: rgba(224,96,96,0.15); border-color: var(--red); color: var(--red); }
+  .btn-again:hover { background: var(--red); color: white; }
+  .btn-good  { background: rgba(93,190,138,0.15); border-color: var(--green); color: var(--green); }
+  .btn-good:hover  { background: var(--green); color: white; }
+
+  /* Challenge typing input */
+  .challenge-area {
+    padding: 16px 20px; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .challenge-label { font-size: 0.78rem; color: var(--accent); text-align: center; }
+  .challenge-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .challenge-input:focus { border-color: var(--accent); }
+  .challenge-input.correct { border-color: var(--green); background: rgba(93,190,138,0.08); }
+  .challenge-input.wrong   { border-color: var(--red);   background: rgba(224,96,96,0.08); }
+  .challenge-submit {
+    background: var(--accent); color: #1a1400;
+    border-radius: var(--radius-sm);
+    padding: 12px; font-weight: 700;
+    transition: opacity var(--transition);
+  }
+  .challenge-submit:hover { opacity: 0.88; }
+
+  /* ── QUIZ SCREEN ───────────────────────────────────────────────── */
+  #quiz-screen { padding: 20px; gap: 16px; }
+  .quiz-question {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+  }
+  .quiz-prompt { font-size: 0.8rem; color: var(--text3); margin-bottom: 10px; }
+  .quiz-word {
+    font-family: var(--font-display);
+    font-size: 2rem; color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .quiz-ipa { font-size: 0.8rem; color: var(--text3); }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-option {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 0.9rem;
+    transition: all var(--transition);
+  }
+  .quiz-option:hover:not([disabled]) { border-color: var(--accent); }
+  .quiz-option.correct { border-color: var(--green); background: rgba(93,190,138,0.12); }
+  .quiz-option.wrong   { border-color: var(--red);   background: rgba(224,96,96,0.12); }
+  .quiz-option[disabled] { cursor: default; }
+
+  /* ── SPRITZI GAME ──────────────────────────────────────────────── */
+  #spritzi-screen { padding: 20px; gap: 14px; }
+  .spritzi-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .lives { display: flex; gap: 4px; }
+  .life { font-size: 1.1rem; }
+  .streak-badge {
+    background: var(--accent2);
+    color: white; font-size: 0.75rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+  }
+  .spritzi-score { font-size: 0.85rem; color: var(--text2); }
+  .spritzi-word {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+  }
+  .spritzi-it {
+    font-family: var(--font-display);
+    font-size: 2.2rem; color: var(--accent); margin-bottom: 6px;
+  }
+  .spritzi-ipa { font-size: 0.8rem; color: var(--text3); }
+  .spritzi-options {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .spritzi-opt {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 10px;
+    text-align: center; font-size: 0.85rem;
+    transition: all var(--transition);
+  }
+  .spritzi-opt:hover:not([disabled]) { border-color: var(--accent); transform: translateY(-1px); }
+  .spritzi-opt.correct { border-color: var(--green); background: rgba(93,190,138,0.15); }
+  .spritzi-opt.wrong   { border-color: var(--red);   background: rgba(224,96,96,0.15); }
+  .spritzi-opt[disabled] { cursor: default; }
+
+  /* ── SESSION SUMMARY ────────────────────────────────────────────── */
+  #summary-screen { padding: 24px; gap: 20px; align-items: center; justify-content: center; text-align: center; }
+  .summary-trophy { font-size: 4rem; margin-bottom: 8px; }
+  .summary-title { font-family: var(--font-display); font-size: 1.6rem; color: var(--accent); }
+  .summary-sub { color: var(--text2); font-size: 0.9rem; }
+  .summary-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; width: 100%; max-width: 360px;
+  }
+  .summary-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .summary-stat .num { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+  .summary-stat .lbl { font-size: 0.72rem; color: var(--text3); }
+  .summary-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; }
+  .primary-btn {
+    background: var(--accent); color: #1a1400;
+    padding: 14px; border-radius: var(--radius);
+    font-weight: 700; font-size: 0.95rem;
+    transition: opacity var(--transition);
+  }
+  .primary-btn:hover { opacity: 0.88; }
+  .secondary-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px; border-radius: var(--radius);
+    font-size: 0.9rem;
+    transition: border-color var(--transition);
+  }
+  .secondary-btn:hover { border-color: var(--accent); }
+
+  /* ── WORD DETAIL MODAL ─────────────────────────────────────────── */
+  #modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 200;
+    align-items: flex-end; justify-content: center;
+  }
+  #modal-overlay.open { display: flex; }
+  #word-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 480px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .modal-it { font-family: var(--font-display); font-size: 2rem; color: var(--accent); }
+  .modal-en { color: var(--text2); margin: 4px 0; }
+  .modal-ipa { font-size: 0.82rem; color: var(--text3); }
+  .modal-ex { font-style: italic; color: var(--text2); font-size: 0.88rem; margin: 12px 0 4px; }
+  .modal-ex-en { font-size: 0.8rem; color: var(--text3); }
+  .modal-section { margin-top: 16px; }
+  .modal-section-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 8px; }
+  .conj-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .conj-table td, .conj-table th { padding: 5px 8px; border: 1px solid var(--border); }
+  .conj-table th { background: var(--surface2); color: var(--text2); font-weight: 600; text-align: left; }
+  .modal-close { position: absolute; top: 16px; right: 16px; font-size: 1.2rem; color: var(--text3); }
+
+  /* ── CONFETTI overlay ─────────────────────────────────────────── */
+  #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+
+  /* ── Toast ────────────────────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 18px;
+    font-size: 0.85rem; opacity: 0; pointer-events: none;
+    transition: opacity 0.25s; z-index: 300; white-space: nowrap;
+  }
+  #toast.show { opacity: 1; }
+
+  /* ── Utility ────────────────────────────────────────────────────── */
+  .loading-spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 40px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+  @media (min-width: 480px) {
+    #pack-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    .spritzi-options { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── iPhone safe areas (notch / Dynamic Island / home indicator) ── */
+  @supports (padding: env(safe-area-inset-bottom)) {
+    header {
+      padding-top: max(14px, env(safe-area-inset-top));
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
+    }
+    #home-screen, #pack-menu-screen, #quiz-screen,
+    #spritzi-screen, #summary-screen {
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+    .card-actions {
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    .challenge-area {
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    #word-modal {
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+  }
+
+  /* ── Touch targets: min 44px for iOS HIG compliance ─────────────── */
+  .pack-card     { min-height: 88px; }
+  .mode-btn      { min-height: 72px; }
+  .quiz-option   { min-height: 52px; }
+  .spritzi-opt   { min-height: 52px; }
+  .action-btn    { min-height: 48px; }
+  .primary-btn, .secondary-btn { min-height: 48px; }
+  .icon-btn      { min-width: 44px; min-height: 44px; }
+
+  /* ── Prevent iOS text size adjustment ───────────────────────────── */
+  body { -webkit-text-size-adjust: 100%; }
+
+  /* ── Momentum scrolling on iOS ──────────────────────────────────── */
+  .screen { -webkit-overflow-scrolling: touch; overflow-y: auto; }
+  #stats-bar { -webkit-overflow-scrolling: touch; }
+
+  /* ── Remove tap highlight on iOS ────────────────────────────────── */
+  * { -webkit-tap-highlight-color: transparent; }
+
+  /* ── Prevent long-press text selection on game elements ─────────── */
+  .flashcard, .quiz-option, .spritzi-opt, .pack-card, .mode-btn {
+    -webkit-user-select: none; user-select: none;
+  }
+
+  /* ── Prevent zoom on input focus (font-size must be >= 16px) ──────── */
+  .challenge-input { font-size: 16px; }
+  input, select, textarea { font-size: 16px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="logo">italiano <span>/ 2000 parole</span></div>
+    <div class="header-right">
+      <button class="icon-btn" id="theme-btn" title="Toggle theme">🌙</button>
+      <button class="icon-btn" id="search-btn" title="Search words">🔍</button>
+    </div>
+  </header>
+
+  <div id="stats-bar">
+    <div class="stat-pill"><strong id="stat-total">0</strong>words seen</div>
+    <div class="stat-pill"><strong id="stat-known">0</strong>known</div>
+    <div class="stat-pill"><strong id="stat-streak">0</strong>day streak</div>
+    <div class="stat-pill"><strong id="stat-packs">0/20</strong>packs done</div>
+    <div class="stat-pill"><strong id="stat-xp">0</strong>XP today</div>
+  </div>
+
+  <!-- HOME -->
+  <section id="home-screen" class="screen active">
+    <div id="wotd">
+      <div class="wotd-label">Word of the Day</div>
+      <div class="wotd-it" id="wotd-it">–</div>
+      <div class="wotd-en" id="wotd-en">–</div>
+      <div class="wotd-ipa" id="wotd-ipa"></div>
+      <div class="wotd-ex" id="wotd-ex"></div>
+    </div>
+
+    <div>
+      <div class="section-title">Choose a Pack</div>
+      <div id="pack-grid"></div>
+    </div>
+
+    <div>
+      <div class="section-title">Quick Play</div>
+      <div id="quick-actions">
+        <button class="quick-btn" onclick="App.startAllPacks('flash')">
+          <div class="btn-icon">🔀</div>All Words — Flash
+        </button>
+        <button class="quick-btn" onclick="App.startAllPacks('quiz')">
+          <div class="btn-icon">🎯</div>All Words — Quiz
+        </button>
+        <button class="quick-btn" onclick="App.startAllPacks('spritzi')">
+          <div class="btn-icon">⚡</div>Spritzi Challenge
+        </button>
+        <button class="quick-btn" onclick="App.showWeakWords()">
+          <div class="btn-icon">💪</div>Weak Words
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PACK MENU -->
+  <section id="pack-menu-screen" class="screen">
+    <button class="back-btn" onclick="App.showScreen('home-screen')">← Back</button>
+    <div class="pack-hero">
+      <div class="pack-emoji-lg" id="menu-emoji">📦</div>
+      <h2 id="menu-title">Pack</h2>
+      <p id="menu-info">100 words</p>
+    </div>
+    <div class="section-title">Choose Mode</div>
+    <div class="mode-grid">
+      <button class="mode-btn" onclick="App.startMode('flash')">
+        <div class="mode-icon">🃏</div>
+        <div class="mode-name">Flashcards</div>
+        <div class="mode-desc">Flip & rate yourself</div>
+      </button>
+      <button class="mode-btn" onclick="App.startMode('quiz')">
+        <div class="mode-icon">🎯</div>
+        <div class="mode-name">Quiz</div>
+        <div class="mode-desc">4-choice multiple choice</div>
+      </button>
+      <button class="mode-btn" onclick="App.startMode('spritzi')">
+        <div class="mode-icon">⚡</div>
+        <div class="mode-name">Spritzi</div>
+        <div class="mode-desc">5-choice speed game</div>
+      </button>
+      <button class="mode-btn" onclick="App.startMode('challenge')">
+        <div class="mode-icon">✍️</div>
+        <div class="mode-name">Challenge</div>
+        <div class="mode-desc">Type the Italian word</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- FLASHCARD -->
+  <section id="flash-screen" class="screen">
+    <div class="game-header">
+      <button class="back-btn" onclick="App.endSession()" style="margin:0">← Exit</button>
+      <div class="game-title" id="flash-title">Flashcards</div>
+      <div class="progress-info"><span id="flash-pos">1</span>/<span id="flash-total">100</span></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="flash-progress" style="width:0%"></div></div>
+
+    <div id="card-area">
+      <div class="flashcard" id="flashcard" onclick="App.flipCard()">
+        <div class="card-face card-front">
+          <div class="card-category" id="card-cat">–</div>
+          <div class="card-it" id="card-it">–</div>
+          <div class="card-ipa" id="card-ipa">–</div>
+          <div class="card-hint">tap to reveal</div>
+          <button class="tts-btn" onclick="event.stopPropagation(); App.speak(document.getElementById('card-it').textContent)">🔊</button>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-category" id="card-cat-back">–</div>
+          <div class="card-en" id="card-en">–</div>
+          <div class="card-ex" id="card-ex">–</div>
+          <div class="card-ex-en" id="card-ex-en">–</div>
+          <button class="tts-btn" onclick="event.stopPropagation(); App.speak(document.getElementById('card-it').textContent)">🔊</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="challenge-area" id="challenge-area" style="display:none">
+      <div class="challenge-label">✍️ Type the Italian:</div>
+      <input type="text" class="challenge-input" id="challenge-input" placeholder="type here…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="challenge-submit" onclick="App.submitChallenge()">Check →</button>
+    </div>
+
+    <div class="card-actions" id="card-actions">
+      <button class="action-btn btn-again" onclick="App.rateCard(0)">🔁 Again</button>
+      <button class="action-btn btn-good"  onclick="App.rateCard(1)">✓ Got it</button>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz-screen" class="screen">
+    <div class="game-header">
+      <button class="back-btn" onclick="App.endSession()" style="margin:0">← Exit</button>
+      <div class="game-title">Quiz</div>
+      <div class="progress-info"><span id="quiz-pos">1</span>/<span id="quiz-total">20</span></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="quiz-progress" style="width:0%"></div></div>
+    <div class="quiz-question">
+      <div class="quiz-prompt" id="quiz-prompt">What does this mean?</div>
+      <div class="quiz-word" id="quiz-word">–</div>
+      <div class="quiz-ipa" id="quiz-ipa">–</div>
+    </div>
+    <div class="quiz-options" id="quiz-options"></div>
+  </section>
+
+  <!-- SPRITZI -->
+  <section id="spritzi-screen" class="screen">
+    <div class="game-header">
+      <button class="back-btn" onclick="App.endSession()" style="margin:0">← Exit</button>
+      <div class="game-title">Spritzi ⚡</div>
+      <div class="progress-info" id="spritzi-info">0 pts</div>
+    </div>
+    <div class="spritzi-header">
+      <div class="lives" id="spritzi-lives">❤️❤️❤️</div>
+      <div class="streak-badge" id="spritzi-streak">🔥 0</div>
+      <div class="spritzi-score" id="spritzi-score-disp">Score: 0</div>
+    </div>
+    <div class="spritzi-word">
+      <div class="quiz-prompt" id="spritzi-prompt">What does this mean?</div>
+      <div class="spritzi-it" id="spritzi-it">–</div>
+      <div class="spritzi-ipa" id="spritzi-ipa">–</div>
+    </div>
+    <div class="spritzi-options" id="spritzi-options"></div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="summary-screen" class="screen">
+    <div class="summary-trophy" id="summary-trophy">🏆</div>
+    <div class="summary-title" id="summary-title">Session Complete!</div>
+    <div class="summary-sub" id="summary-sub">–</div>
+    <div class="summary-stats">
+      <div class="summary-stat"><div class="num" id="sum-seen">0</div><div class="lbl">Seen</div></div>
+      <div class="summary-stat"><div class="num" id="sum-correct">0</div><div class="lbl">Correct</div></div>
+      <div class="summary-stat"><div class="num" id="sum-xp">+0</div><div class="lbl">XP</div></div>
+    </div>
+    <div class="summary-actions">
+      <button class="primary-btn" onclick="App.replaySession()">Play Again</button>
+      <button class="secondary-btn" onclick="App.showScreen('home-screen')">Home</button>
+    </div>
+  </section>
+
+</div><!-- #app -->
+
+<!-- Word detail modal -->
+<div id="modal-overlay" onclick="App.closeModal()">
+  <div id="word-modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-it" id="modal-it">–</div>
+    <div class="modal-en" id="modal-en">–</div>
+    <div class="modal-ipa" id="modal-ipa">–</div>
+    <div class="modal-ex" id="modal-ex">–</div>
+    <div class="modal-ex-en" id="modal-ex-en">–</div>
+    <div class="modal-section" id="modal-conj-section" style="display:none">
+      <div class="modal-section-title">Conjugation (present)</div>
+      <table class="conj-table" id="modal-conj-table"></table>
+    </div>
+    <div style="margin-top:16px; display:flex; gap:10px;">
+      <button class="secondary-btn" style="flex:1" onclick="App.speak(document.getElementById('modal-it').textContent)">🔊 Hear it</button>
+      <button class="primary-btn" style="flex:1" onclick="App.closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

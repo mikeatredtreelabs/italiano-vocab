@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="38" fill="#1a1a22"/>
+  <text x="96" y="105" font-family="Georgia,serif" font-size="80" font-weight="bold"
+        text-anchor="middle" fill="#e8c468">it</text>
+  <rect x="0" y="150" width="64" height="42" fill="#009246"/>
+  <rect x="64" y="150" width="64" height="42" fill="#ffffff"/>
+  <rect x="128" y="150" width="64" height="42" fill="#ce2b37"/>
+</svg>
