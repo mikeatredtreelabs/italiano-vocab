@@ -1065,6 +1065,7 @@ function renderQuiz(app) {
   const progress = `${state.sessionIdx + 1} / ${state.sessionQueue.length}`;
   const distractors = pickDistractors(word, state.packWords, 3);
   const options = shuffle([word.en, ...distractors]);
+  const itSafe = word.it.replace(/'/g, "\'");
 
   app.innerHTML = `
     <div class="game-header">
@@ -1078,7 +1079,7 @@ function renderQuiz(app) {
       <div class="quiz-it">${word.it}</div>
       ${state.settings.ipa ? `<div class="quiz-ipa">[${word.ipa}]</div>` : ''}
       <div class="quiz-card-actions">
-        <button class="speak-mini" onclick="speak('${word.it.replace(/'/g,\"\\'\")}')">🔊</button>
+        <button class="speak-mini" onclick="speak('${itSafe}')">🔊</button>
         ${word.cat === 'Verb' && CONJUGATIONS[word.it] ? `<button class="conj-inline-btn" onclick="showConjugation('${word.it}')">📋 Conjugate</button>` : ''}
       </div>
     </div>
