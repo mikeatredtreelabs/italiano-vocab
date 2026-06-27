@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>What's New · Sengeri</title>
+  <meta name="description" content="See what's new in Sengeri — Italian vocabulary trainer with 2,000 words." />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f0e17" />
+  <style>
+    :root {
+      --bg:        #0f0e17;
+      --surface:   #1a1927;
+      --surface2:  #242338;
+      --border:    #2e2c45;
+      --accent:    #e63946;
+      --accent2:   #ff6b6b;
+      --gold:      #f4a261;
+      --green:     #2ec4b6;
+      --blue:      #4361ee;
+      --text:      #fffffe;
+      --muted:     #a7a5c0;
+      --radius:    14px;
+      --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg:       #f8f7ff;
+      --surface:  #ffffff;
+      --surface2: #f0effe;
+      --border:   #dddaf5;
+      --text:     #0f0e17;
+      --muted:    #6e6c88;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+    }
+
+    /* ── Header ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: calc(env(safe-area-inset-top) + 12px) 20px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 0;
+      text-decoration: none;
+    }
+    .back-btn svg { flex-shrink: 0; }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 24px 36px;
+      text-align: center;
+    }
+
+    .hero-flag {
+      font-size: 48px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-size: clamp(26px, 6vw, 36px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .hero h1 span {
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 360px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-top: 16px;
+    }
+
+    /* ── Main content ── */
+    .content {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ── Section headers ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 32px 4px 12px;
+    }
+
+    /* ── Feature cards ── */
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 18px 16px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+    }
+
+    .feature-card.new::before  { background: var(--accent); }
+    .feature-card.existing::before { background: var(--green); }
+
+    .feature-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .feature-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feature-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+
+    .feature-tag {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+
+    .tag-new      { background: rgba(230,57,70,0.15); color: var(--accent2); }
+    .tag-existing { background: rgba(46,196,182,0.15); color: var(--green); }
+    .tag-core     { background: rgba(67,97,238,0.15);  color: #7b96f7; }
+
+    .feature-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ── Stats bar ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 28px 0 4px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-number.red    { color: var(--accent); }
+    .stat-number.green  { color: var(--green); }
+    .stat-number.gold   { color: var(--gold); }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center;
+      padding: 36px 16px 12px;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      letter-spacing: -0.2px;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+
+    .cta-btn:active {
+      opacity: 0.85;
+      transform: scale(0.97);
+    }
+
+    .cta-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0;
+    }
+
+    /* ── Changelog timeline ── */
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .timeline-entry {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -24px;
+      top: 6px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+
+    .timeline-dot.current { background: var(--accent); }
+    .timeline-dot.past    { background: var(--border); }
+
+    .timeline-version {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .timeline-version.current { color: var(--accent); }
+
+    .timeline-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    .page-footer {
+      text-align: center;
+      padding: 24px 16px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      margin-top: 24px;
+    }
+
+    .page-footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root { --bg:#f8f7ff; --surface:#ffffff; --surface2:#f0effe; --border:#dddaf5; --text:#0f0e17; --muted:#6e6c88; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <a href="app.html" class="back-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Back to App
+    </a>
+    <span class="header-title">What's New</span>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-flag">🇮🇹</div>
+    <h1>Sengeri is getting <span>smarter</span></h1>
+    <p class="hero-sub">Six new features inspired by the best language learning apps — built right into your Italian trainer.</p>
+    <div class="version-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Version 2.0
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="content">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-number red">6</div>
+        <div class="stat-label">New Features</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number green">2,005</div>
+        <div class="stat-label">Italian Words</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number gold">20</div>
+        <div class="stat-label">Topic Packs</div>
+      </div>
+    </div>
+
+    <!-- NEW FEATURES -->
+    <div class="section-label">✨ New in Version 2.0</div>
+
+    <div class="feature-card new">
+      <div class="feature-header">
+        <div class="feature-icon">👂</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-new">New</div>
+          <div class="feature-title">Listening Mode</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Hear a word spoken in Italian and identify it from four choices — no text shown. Perfect for training your ear, not just your eyes. Access it inside any pack via the new headphones tab.
+      </div>
+    </div>
+
+    <div class="feature-card new">
+      <div class="feature-header">
+        <div class="feature-icon">📝</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-new">New</div>
+          <div class="feature-title">Sentence Mode (Cloze)</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Every word in Sengeri comes with a real example sentence. Now you can practice by filling in the missing Italian word in context — the way language actually lives. Powered by the built-in example sentences across all 2,005 words.
+      </div>
+    </div>
+
+    <div class="feature-card new">
+      <div class="feature-header">
+        <div class="feature-icon">🎤</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-new">New</div>
+          <div class="feature-title">Pronunciation Practice</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        See a word, then say it aloud. Your microphone listens and tells you whether your Italian pronunciation was recognized correctly. Uses the Web Speech API — works best in Chrome and Safari on iOS 17+.
+      </div>
+    </div>
+
+    <div class="feature-card new">
+      <div class="feature-header">
+        <div class="feature-icon">📅</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-new">New</div>
+          <div class="feature-title">Daily Review Queue</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Words you've struggled with are automatically queued for review based on your history. The home screen now shows how many words are due today — tap to jump straight into your personalized review session.
+      </div>
+    </div>
+
+    <div class="feature-card new">
+      <div class="feature-header">
+        <div class="feature-icon">📊</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-new">New</div>
+          <div class="feature-title">Pack Mastery %</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Every pack on the home screen now shows your mastery percentage — how many words you've seen and rated correctly at least twice. Watch the number climb as you study.
+      </div>
+    </div>
+
+    <div class="feature-card new">
+      <div class="feature-header">
+        <div class="feature-icon">❌</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-new">New</div>
+          <div class="feature-title">Weak Words List</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        A dedicated view of the words you miss most — ranked by error count across all packs. Tap any word to open its detail card, or start a focused practice session on your weakest words only.
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- EXISTING FEATURES -->
+    <div class="section-label">⚡ Already in the App</div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">🃏</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Flashcard Mode</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Classic flip-cards with Italian on one side, English on the other. Rate each word Easy, Good, or Hard to feed the spaced repetition engine. Keyboard shortcuts: Space to flip, arrow keys to rate.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">⌨️</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Challenge Mode</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Type the Italian word from the English prompt. Levenshtein-based typo tolerance means one small slip doesn't mark you wrong — but you still have to get it right. Great for active recall.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Quiz Mode (4-Choice MCQ)</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Multiple choice — see the Italian word, pick the right English meaning from four options. Smart distractors are pulled from the same pack so wrong answers feel plausible, not random.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Spritzi Speed Game</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Five choices, three lives, a live streak counter, and a ticking clock. The fastest, most intense way to drill vocab in Sengeri. High scores trigger confetti. Lose all lives and it's game over.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">🔁</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Spaced Repetition</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Words you struggle with appear more often; words you've mastered fade to the back. Bucket-based weighting keeps every session efficient — always working on what you need most.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">🔊</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Italian Text-to-Speech</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Every word and example sentence can be read aloud using native Italian voices via the Web Speech API. Tap the speaker icon anywhere in the app, or enable auto-speak in flashcard mode.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">📈</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">XP, Streaks & Stats</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Earn XP for every session, maintain a daily streak, and track your progress across all packs in the Progress tab. Your stats persist in localStorage — no account needed.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">🌅</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Word of the Day</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        A fresh Italian word greets you on the home screen every morning, complete with pronunciation, IPA, and an example sentence. A quiet daily nudge to keep your Italian moving.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">🔤</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">IPA Pronunciation Guide</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Every one of the 2,005 words includes its International Phonetic Alphabet transcription. Toggle IPA display on or off in any study mode — useful for learners who read phonetics.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">🔡</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Conjugation Tables</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Tap any of the 16 key verbs to see full present, past, and future conjugation tables — all six persons, formatted cleanly. A quick grammar reference built right into the trainer.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">🌙</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Dark / Light Theme</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Switch between dark and light modes with a tap. Your preference is saved. The app defaults to dark — easier on the eyes for late-night study sessions.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">📱</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">Works Like a Native App (PWA)</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Add Sengeri to your iPhone or Android home screen for a full-screen, no-browser-chrome experience. A service worker caches all 2,005 words locally so the app works offline — no internet needed after first load.
+      </div>
+    </div>
+
+    <div class="feature-card existing">
+      <div class="feature-header">
+        <div class="feature-icon">📦</div>
+        <div class="feature-meta">
+          <div class="feature-tag tag-existing">Core</div>
+          <div class="feature-title">20 Themed Vocabulary Packs</div>
+        </div>
+      </div>
+      <div class="feature-desc">
+        Words organized into 20 real-life topics: Greetings, Restaurant, Travel, Verbs, Family, Body, Health, Shopping, Home, Nature, Animals, Work, Technology, Sports, Arts, Emotions, and more. Study a topic, or mix them all.
+      </div>
+    </div>
+
+    <!-- Changelog -->
+    <div class="divider"></div>
+    <div class="section-label">📋 Version History</div>
+
+    <div class="timeline">
+      <div class="timeline-entry">
+        <div class="timeline-dot current"></div>
+        <div class="timeline-version current">Version 2.0 — June 2026</div>
+        <div class="timeline-desc">Listening mode, Sentence/cloze mode, Pronunciation practice, Daily review queue, Pack mastery %, Weak words list.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-dot past"></div>
+        <div class="timeline-version">Version 1.1</div>
+        <div class="timeline-desc">iPhone PWA support, offline caching via service worker, safe area insets, "Sengeri" rebrand.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-dot past"></div>
+        <div class="timeline-version">Version 1.0</div>
+        <div class="timeline-desc">Initial launch. 2,005 Italian words across 20 packs. Flashcard, Challenge, Quiz, and Spritzi modes. Spaced repetition, TTS, XP tracking, Word of the Day, conjugation tables, dark mode.</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <a href="app.html" class="cta-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        Start Studying
+      </a>
+      <div class="cta-note">All features free — no account required</div>
+    </div>
+
+  </main>
+
+  <footer class="page-footer">
+    Made with ❤️ · <a href="app.html">Back to Sengeri</a>
+  </footer>
+
+  <script>
+    // Apply saved theme
+    const saved = localStorage.getItem('sengeri-theme');
+    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  </script>
+</body>
+</html>
