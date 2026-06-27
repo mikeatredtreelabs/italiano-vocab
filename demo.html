@@ -441,11 +441,14 @@
     let soundOn = true;
     let ttsVoice = null;
 
-    // Init TTS voices
+    // Init TTS voices — prefer Italian voice speaking English for accent effect
     function initVoices() {
       const set = () => {
         const voices = speechSynthesis.getVoices();
-        ttsVoice = voices.find(v => v.lang.startsWith('en-US') && v.name.includes('Female'))
+        // Priority: Italian voice (speaks English with Italian accent)
+        // Fallback: any English voice
+        ttsVoice = voices.find(v => v.lang.startsWith('it'))
+                || voices.find(v => v.lang.startsWith('en-US'))
                 || voices.find(v => v.lang.startsWith('en'))
                 || null;
       };
@@ -459,12 +462,13 @@
       speechSynthesis.cancel();
       if (!soundOn) return;
       const utt = new SpeechSynthesisUtterance(text);
-      utt.lang = 'en-US';
-      utt.rate = 0.92;
-      utt.pitch = 1.0;
+      // Keep lang as en so the English words are intelligible,
+      // but the Italian voice engine gives it an Italian flavour
+      utt.lang = ttsVoice && ttsVoice.lang.startsWith('it') ? 'it-IT' : 'en-US';
+      utt.rate = 0.88;
+      utt.pitch = 1.05;
       if (ttsVoice) utt.voice = ttsVoice;
       utt.onend = () => {
-        // Only auto-advance if we haven't manually navigated away
         clearInterval(autoTimer);
         autoTimer = setTimeout(() => goTo(cur + 1), 1200);
       };
