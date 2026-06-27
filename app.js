@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.0.2';
+const APP_VERSION = '2.0.3';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
