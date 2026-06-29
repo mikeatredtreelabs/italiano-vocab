@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Sengeri — Italian Vocab Trainer
+   Segneri — Italian Vocab Trainer
    app.js
    ═══════════════════════════════════════════════════════════════ */
 
@@ -473,7 +473,7 @@ async function renderHome(app) {
 
   app.innerHTML = `
     <div class="page-header">
-      <button class="logo logo-btn" onclick="showAboutSheet()">🇮🇹 <span>Sengeri</span> <span class="logo-chevron">›</span></button>
+      <button class="logo logo-btn" onclick="showAboutSheet()">🇮🇹 <span>Segneri</span> <span class="logo-chevron">›</span></button>
       <div class="header-actions">
         <button onclick="toggleTheme()" class="icon-btn" title="Toggle theme">${state.theme === 'dark' ? '☀️' : '🌙'}</button>
       </div>
@@ -1643,7 +1643,7 @@ function showAboutSheet() {
       <div class="modal-header">
         <span class="modal-emoji">🇮🇹</span>
         <div>
-          <h2>Sengeri</h2>
+          <h2>Segneri</h2>
           <div class="modal-subtitle">Italian Vocabulary Trainer</div>
         </div>
         <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
@@ -1718,7 +1718,7 @@ function showAboutSheet() {
 
       <div class="about-section-label">Privacy</div>
       <div class="about-privacy">
-        <p>Sengeri stores your progress, streak, and XP <strong>only on this device</strong> using localStorage. No account, no server, no data ever leaves your phone. Clearing your browser data or uninstalling will erase your progress.</p>
+        <p>Segneri stores your progress, streak, and XP <strong>only on this device</strong> using localStorage. No account, no server, no data ever leaves your phone. Clearing your browser data or uninstalling will erase your progress.</p>
         <p>The app uses your microphone only when you tap the 🎤 Speak button — it is never accessed in the background.</p>
         <p>Text-to-speech uses your device's built-in voice engine. No audio is recorded or transmitted.</p>
       </div>
@@ -1848,7 +1848,7 @@ function showInstallBanner() {
   const banner = document.createElement('div');
   banner.className = 'install-banner';
   banner.innerHTML = `
-    <span>📱 Add Sengeri to your home screen!</span>
+    <span>📱 Add Segneri to your home screen!</span>
     <button onclick="installApp()">Install</button>
     <button onclick="this.parentNode.remove()">✕</button>
   `;

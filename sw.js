@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   Sengeri — Service Worker v2.0.3
+   Segneri — Service Worker v2.0.3
    Network-first for shell, cache-first for pack files
    ═══════════════════════════════════════════════════════════════════ */
 
