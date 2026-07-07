@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.2.1';
+const APP_VERSION = '2.2.2';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -799,7 +799,6 @@ async function renderDailyQuiz(app) {
     <div class="flash-card ${flipped ? 'flipped' : ''}" onclick="flipDaily()" id="daily-card">
       <div class="flash-front">
         <div class="flash-it">${word.it}</div>
-        <div class="flash-tap">tap to reveal</div>
       </div>
       <div class="flash-back">
         <div class="daily-it-small">${word.it} <button class="speak-mini" onclick="event.stopPropagation(); speak('${word.it.replace(/'/g,"\\'")}')">🔊</button></div>
