@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.2.4';
+const APP_VERSION = '2.3.0';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -517,7 +517,7 @@ async function renderHome(app) {
 
     <div class="section-title">Study Modes</div>
     <div class="mode-grid">
-      ${renderModeCard('dailyquiz','🎴','Daily Quiz',    'Flip 10, self-grade')}
+      ${renderModeCard('dailyquiz','🎴','Daily Quiz',    '10 words + a verb')}
       ${renderModeCard('quiz',    '🧠', 'Quiz',          '4-choice MCQ')}
       ${renderModeCard('spritzi', '⚡', 'Spritzi',       'Speed game, 3 lives')}
       ${renderModeCard('listen',  '👂', 'Listening',     'Hear & identify')}
@@ -763,12 +763,18 @@ async function buildDailyQueue() {
     if (!pack) continue;
     for (const w of pack.words) all.push({ ...w, _packId: packId });
   }
-  return shuffle(all).slice(0, 10);
+  const queue = shuffle(all).slice(0, 10);
+  // Final card: one random verb to conjugate in a random tense
+  const verbs = Object.keys(CONJUGATIONS);
+  const verb  = verbs[Math.floor(Math.random() * verbs.length)];
+  const tense = ['present','past','future'][Math.floor(Math.random() * 3)];
+  queue.push({ _verb: verb, _tense: tense });
+  return queue;
 }
 
 async function renderDailyQuiz(app) {
   if (!state.dailyQueue.length) {
-    app.innerHTML = `<div class="loading-inline">Preparing your 10 words…</div>`;
+    app.innerHTML = `<div class="loading-inline">Preparing your 10 words + verb…</div>`;
     const queue = await buildDailyQueue();
     if (state.tab !== 'dailyquiz') return; // user navigated away mid-load
     state.dailyQueue = queue;
@@ -786,7 +792,46 @@ async function renderDailyQuiz(app) {
 
   const word = state.dailyQueue[state.dailyIdx];
   const flipped = state.dailyFlipped;
-  const progress = `${state.dailyIdx + 1} / ${state.dailyQueue.length}`;
+  const progress = word._verb ? 'Verb Challenge' : `${state.dailyIdx + 1} / ${state.dailyQueue.length - 1}`;
+
+  if (word._verb) {
+    const data = CONJUGATIONS[word._verb];
+    const tenseLabel = word._tense.charAt(0).toUpperCase() + word._tense.slice(1);
+    app.innerHTML = `
+      <div class="game-header">
+        <button class="back-btn" onclick="quitDaily()">← Daily Quiz</button>
+        <span class="progress-text">${progress}</span>
+        <span class="progress-text">✅ ${state.dailyRight} · ❌ ${state.dailyWrong}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(state.dailyIdx / state.dailyQueue.length) * 100}%"></div></div>
+
+      <div class="flash-card ${flipped ? 'flipped' : ''}" onclick="flipDaily()" id="daily-card">
+        <div class="flash-front">
+          <div class="daily-verb-badge">🔄 Verb Challenge</div>
+          <div class="flash-it">${word._verb}</div>
+          <div class="daily-verb-meta">${data.en} · ${tenseLabel} tense</div>
+          <div class="daily-verb-hint">Say all 6 forms, then flip to check</div>
+        </div>
+        <div class="flash-back">
+          <div class="daily-it-small">${word._verb} · ${tenseLabel} <button class="speak-mini" onclick="event.stopPropagation(); speak('${word._verb}')">🔊</button></div>
+          <div class="daily-conj-grid">
+            ${PERSONS.map((p, i) => `
+              <div class="daily-conj-row" onclick="event.stopPropagation(); speak('${data[word._tense][i].replace(/'/g,"\\'")}')">
+                <span class="daily-conj-person">${p}</span>
+                <strong class="daily-conj-form">${data[word._tense][i]}</strong>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="daily-grade-row">
+        <button class="daily-btn wrong ${flipped ? '' : 'pre-flip'}" onclick="${flipped ? 'gradeDaily(false)' : 'flipDaily()'}" aria-label="Got it wrong">✕</button>
+        <button class="daily-btn right ${flipped ? '' : 'pre-flip'}" onclick="${flipped ? 'gradeDaily(true)' : 'flipDaily()'}" aria-label="Got it right">✓</button>
+      </div>
+    `;
+    return;
+  }
 
   app.innerHTML = `
     <div class="game-header">
@@ -818,16 +863,16 @@ function flipDaily() {
   if (state.dailyFlipped) return;
   state.dailyFlipped = true;
   const word = state.dailyQueue[state.dailyIdx];
-  if (word) speak(word.it); // sound always plays on flip
+  if (word) speak(word._verb || word.it); // sound always plays on flip
   render();
 }
 
 function gradeDaily(correct) {
   const word = state.dailyQueue[state.dailyIdx];
   if (!word) return;
-  if (correct) { state.dailyRight++; addXP(2); }
+  if (correct) { state.dailyRight++; addXP(word._verb ? 3 : 2); }
   else         { state.dailyWrong++; }
-  recordResult(word._packId, word, correct);
+  if (!word._verb) recordResult(word._packId, word, correct);
   state.dailyIdx++;
   state.dailyFlipped = false;
   render();
@@ -848,12 +893,12 @@ function renderDailyScore(app) {
       <div class="score-sub">✅ ${right} right · ❌ ${wrong} wrong</div>
       <div class="score-meter"><div class="score-meter-fill" style="width:${pct}%"></div></div>
       ${perfect
-        ? `<div class="score-detail">You nailed all ${total} words. Ready for a fresh set?</div>
+        ? `<div class="score-detail">You nailed all 10 words and the verb challenge. Ready for a fresh set?</div>
            <div class="score-actions">
              <button class="primary-btn" onclick="newDailyRound()">✨ 10 New Words</button>
              <button class="secondary-btn" onclick="quitDaily()">Done</button>
            </div>`
-        : `<div class="score-detail">You missed ${wrong} word${wrong !== 1 ? 's' : ''}. Want to run the same 10 again?</div>
+        : `<div class="score-detail">You missed ${wrong} card${wrong !== 1 ? 's' : ''}. Want to run the same round again?</div>
            <div class="score-actions">
              <button class="primary-btn" onclick="retryDailyRound()">🔁 Same Words Again</button>
              <button class="secondary-btn" onclick="newDailyRound()">✨ 10 New Words</button>
@@ -865,7 +910,9 @@ function renderDailyScore(app) {
 }
 
 function retryDailyRound() {
-  state.dailyQueue = shuffle(state.dailyQueue);
+  const words    = state.dailyQueue.filter(w => !w._verb);
+  const verbCard = state.dailyQueue.filter(w => w._verb);
+  state.dailyQueue = [...shuffle(words), ...verbCard];
   state.dailyIdx = 0;
   state.dailyFlipped = false;
   state.dailyRight = 0;
