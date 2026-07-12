@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
-   Segneri — Service Worker v2.8.0
+   Segneri — Service Worker v2.9.0
    Network-first for shell, cache-first for pack files
    ═══════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'sengeri-v21';
+const CACHE_NAME = 'sengeri-v22';
 
 const SHELL_FILES = [
   './app.html',

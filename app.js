@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.8.0';
+const APP_VERSION = '2.9.0';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -2300,6 +2300,8 @@ function renderTutorSettings() {
     `<button class="tutor-lvl${p.level === id ? ' on' : ''}" onclick="setTutorPref('level','${id}')">${label}</button>`;
   const avBtn = (id, label) =>
     `<button class="tutor-lvl${p.avatar === id ? ' on' : ''}" onclick="setTutorPref('avatar','${id}')">${label}</button>`;
+  const engBtn = (id, label) =>
+    `<button class="tutor-lvl${p.engine === id ? ' on' : ''}" onclick="setTutorPref('engine','${id}')">${label}</button>`;
   return `
     <div class="tutor-settings">
       <div class="tutor-set-row"><span>Avatar</span>
@@ -2313,6 +2315,14 @@ function renderTutorSettings() {
       <div class="tutor-set-row"><span>Level</span>
         <div class="tutor-lvl-group">${lvlBtn('beginner','A1')}${lvlBtn('intermediate','A2–B1')}${lvlBtn('advanced','B1+')}</div>
       </div>
+      <div class="tutor-set-row"><span>Voice engine</span>
+        <div class="tutor-lvl-group">${engBtn('browser','Browser')}${engBtn('xtts','My voice')}</div>
+      </div>
+      ${p.engine === 'xtts' ? `<div class="tutor-set-row"><span>XTTS server</span>
+        <input type="text" class="tutor-key-input" style="max-width:55%" placeholder="http://localhost:8757"
+          value="${escapeHtml(p.xttsUrl)}" onchange="setTutorPref('xttsUrl', this.value.trim())">
+      </div>
+      <div class="tutor-set-row"><span class="tutor-set-hint">Runs on your PC — see server/README.md. Falls back to browser voice if unreachable.</span></div>` : ''}
       <div class="tutor-set-row"><span>Voice</span>
         <select class="tutor-voice-sel" onchange="setTutorPref('voice', this.value)">
           <option value="">Auto (Italian)</option>${opts}
@@ -2477,13 +2487,14 @@ function resetTutorSession(rerender = true) {
 function exitTutor() {
   stopTutorMic();
   window.speechSynthesis?.cancel();
+  if (tutorXttsAudio) { try { tutorXttsAudio.pause(); } catch {} tutorXttsAudio = null; }
   setTab('home');
 }
 
 /* ── Tutor prefs / persistence ─────────────────────────────── */
 function getTutorPrefs() {
   return Object.assign(
-    { voice: '', level: 'beginner', whisperUrl: '', autoSpeak: true, avatar: 'marco' },
+    { voice: '', level: 'beginner', whisperUrl: '', autoSpeak: true, avatar: 'marco', engine: 'browser', xttsUrl: '' },
     load(TUTOR_PREFS_KEY, {})
   );
 }
@@ -2554,12 +2565,20 @@ function getItalianVoices() {
     .sort((a, b) => (/Natural/.test(b.name) ? 1 : 0) - (/Natural/.test(a.name) ? 1 : 0));
 }
 
+let tutorXttsAudio = null;
+
 function tutorSpeak(text) {
+  const p = getTutorPrefs();
+  if (p.engine === 'xtts' && p.xttsUrl) { xttsSpeak(text, p); return; }
+  browserSpeak(text, p);
+}
+
+function browserSpeak(text, p) {
   if (!window.speechSynthesis) return;
   speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
   utt.lang = 'it-IT';
-  const p = getTutorPrefs();
+  p = p || getTutorPrefs();
   const v = getItalianVoices().find(x => x.name === p.voice) || getItalianVoices()[0];
   if (v) utt.voice = v;
   utt.rate = 0.92;
@@ -2567,6 +2586,29 @@ function tutorSpeak(text) {
   const stop  = () => document.getElementById('tutor-avatar')?.classList.remove('talking');
   utt.onend = stop; utt.onerror = stop;
   speechSynthesis.speak(utt);
+}
+
+async function xttsSpeak(text, p) {
+  const av = document.getElementById('tutor-avatar');
+  if (tutorXttsAudio) { try { tutorXttsAudio.pause(); } catch {} tutorXttsAudio = null; }
+  try {
+    const res = await fetch(p.xttsUrl.replace(/\/+$/, '') + '/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, language: 'it' })
+    });
+    if (!res.ok) throw new Error('xtts ' + res.status);
+    const url = URL.createObjectURL(await res.blob());
+    const a = new Audio(url);
+    tutorXttsAudio = a;
+    a.onplay = () => av?.classList.add('talking');
+    const stop = () => { av?.classList.remove('talking'); URL.revokeObjectURL(url); };
+    a.onended = stop; a.onerror = stop;
+    a.play();
+  } catch (e) {
+    showToast('My-voice server unreachable — using browser voice');
+    browserSpeak(text);
+  }
 }
 
 /* ── Tutor STT: local whisper server, or browser fallback ──── */
