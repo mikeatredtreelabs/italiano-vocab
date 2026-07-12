@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.5.0';
+const APP_VERSION = '2.5.1';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -2531,7 +2531,20 @@ if ('serviceWorker' in navigator) {
 }
 
 /* ── Init ────────────────────────────────────────────────────── */
+/* One-time API key handoff: open app.html#tutorkey=sk-ant-... once
+   (e.g. a link sent from desktop to phone). The key is saved to
+   localStorage and immediately scrubbed from the URL. URL fragments
+   are never sent to any server. */
+function absorbTutorKeyFromURL() {
+  const m = location.hash.match(/[#&]tutorkey=([^&]+)/);
+  if (!m) return;
+  save(TUTOR_KEY, decodeURIComponent(m[1]).trim());
+  history.replaceState(null, '', location.pathname + location.search);
+  showToast('Tutor API key saved on this device ✓');
+}
+
 async function init() {
+  absorbTutorKeyFromURL();
   loadPersisted();
   applyTheme();
   initVoices();
