@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.4.0';
+const APP_VERSION = '2.5.0';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -16,7 +16,9 @@ const STREAK_KEY    = 'sengeri-streak';
 const XP_KEY        = 'sengeri-xp';
 const ERRORS_KEY    = 'sengeri-errors';   // NEW: per-word error counts
 const SEEN_KEY      = 'sengeri-seen';     // NEW: per-word seen dates
-const TUTOR_KEY     = 'sengeri-tutor-key'; // Anthropic API key (device-local only)
+const TUTOR_KEY     = 'sengeri-tutor-key';     // Anthropic API key (device-local only)
+const TUTOR_PREFS_KEY   = 'sengeri-tutor-prefs';   // voice, level, whisper URL, auto-speak
+const TUTOR_SESSION_KEY = 'sengeri-tutor-session'; // persisted conversation
 
 const PACK_MAP = {
   greet:     { file: 'pack-greet.js',     varName: 'PACK_greet'     },
@@ -103,6 +105,11 @@ let state = {
   tutorBusy:     false,
   tutorRecap:    null,
   tutorEnded:    false,
+  tutorShowSettings: false,
+  tutorRecording: false,     // mic active (either engine)
+  tutorRec:       null,      // SpeechRecognition instance
+  tutorMediaRec:  null,      // MediaRecorder instance (whisper path)
+  tutorVoiceInput: false,    // last input came from mic
 };
 
 /* ── localStorage helpers ───────────────────────────────────── */
@@ -2033,6 +2040,12 @@ function escapeHtml(s) {
 
 /* Build once per session and keep stable so prompt caching hits. */
 function buildTutorSystemPrompt() {
+  const level = getTutorPrefs().level;
+  const levelDesc = {
+    beginner:     'a true beginner: very simple vocabulary, mostly present tense, short common phrases',
+    intermediate: 'an early-intermediate learner: everyday vocabulary, passato prossimo and simple future are fine',
+    advanced:     'an upper-intermediate learner: richer vocabulary, subjunctive and complex structures welcome',
+  }[level] || 'a beginner';
   const weak = getWeakWords(12).map(w => `${w.it} (${w.en})`).join(', ');
   const recent = Object.entries(state.seen)
     .sort((a, b) => String(b[1]).localeCompare(String(a[1])))
@@ -2041,7 +2054,7 @@ function buildTutorSystemPrompt() {
     .join(', ');
 
   return [
-    'You are a friendly, encouraging Italian tutor chatting (text only) with a beginner/early-intermediate adult learner inside their vocabulary app, Segneri.',
+    `You are Sofia, a friendly, encouraging Italian tutor chatting with an adult learner inside their vocabulary app, Segneri. The learner is ${levelDesc}.`,
     '',
     'Rules:',
     '- Speak primarily in Italian, calibrated to their level. Keep every turn SHORT: 1-3 sentences, then usually a simple question to keep the conversation going.',
@@ -2050,6 +2063,7 @@ function buildTutorSystemPrompt() {
     '- If they struggle, simplify vocabulary and slow down. If they are comfortable, introduce slightly harder structures.',
     '- Open the session with a short greeting and one easy question.',
     '- When asked for a session recap, give 2-3 bullet items in English covering corrections made and new vocabulary introduced, then a one-line encouragement in Italian.',
+    '- Messages prefixed with (spoken) were transcribed from the learner\'s speech. Odd wording there may reflect pronunciation issues rather than grammar — gently note the likely mispronunciation and model the correct sound.',
     '',
     weak   ? `Words the learner has struggled with (weave a few in naturally when it fits): ${weak}` : '',
     recent ? `Words the learner studied recently: ${recent}` : '',
@@ -2057,7 +2071,10 @@ function buildTutorSystemPrompt() {
 }
 
 async function callTutorAPI() {
-  const msgs = state.tutorMessages.map(m => ({ role: m.role, content: m.content }));
+  const msgs = state.tutorMessages.map(m => ({
+    role: m.role,
+    content: (m.spoken ? '(spoken) ' : '') + m.content,
+  }));
   const body = {
     model: TUTOR_MODEL,
     max_tokens: TUTOR_MAX_TOKENS,
@@ -2086,14 +2103,24 @@ async function callTutorAPI() {
 function renderTutor(app) {
   if (!getTutorKey()) return renderTutorKeyScreen(app);
 
+  // Restore a persisted session (survives refresh / app restart)
+  if (!state.tutorMessages.length) restoreTutorSession();
+
+  const hasUserTurn = state.tutorMessages.some(m => m.role === 'user' && !m.hidden);
+
   app.innerHTML = `
     <div class="game-header">
       <button class="back-btn" onclick="exitTutor()">← Tutor</button>
       <div style="display:flex;gap:4px;align-items:center;">
-        <button class="icon-btn" title="API key" onclick="changeTutorKey()">🔑</button>
-        ${state.tutorMessages.some(m => m.role === 'user' && !m.hidden) && !state.tutorEnded
+        <button class="icon-btn" title="Tutor settings" onclick="toggleTutorSettings()">⚙️</button>
+        ${hasUserTurn && !state.tutorEnded
           ? '<button class="tutor-end-btn" onclick="endTutorSession()">End</button>' : ''}
       </div>
+    </div>
+    ${state.tutorShowSettings ? renderTutorSettings() : ''}
+    <div class="tutor-avatar-row">
+      <div class="tutor-avatar" id="tutor-avatar">${tutorAvatarSVG()}</div>
+      <div class="tutor-avatar-name">Sofia</div>
     </div>
     <div class="tutor-msgs" id="tutor-msgs">${renderTutorBubbles()}</div>
     ${state.tutorEnded ? `
@@ -2102,7 +2129,8 @@ function renderTutor(app) {
       </div>
     ` : `
       <div class="tutor-input-bar">
-        <textarea id="tutor-input" class="tutor-input" rows="1" placeholder="Scrivi in italiano…"
+        <button class="tutor-mic${state.tutorRecording ? ' rec' : ''}" id="tutor-mic" onclick="toggleTutorMic()">🎤</button>
+        <textarea id="tutor-input" class="tutor-input" rows="1" placeholder="Scrivi o parla in italiano…"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTutorMessage();}"></textarea>
         <button class="tutor-send" id="tutor-send" onclick="sendTutorMessage()" ${state.tutorBusy ? 'disabled' : ''}>➤</button>
       </div>
@@ -2113,6 +2141,59 @@ function renderTutor(app) {
 
   // Kick off the tutor's opening greeting on first visit of a session
   if (!state.tutorMessages.length && !state.tutorBusy) startTutorSession();
+}
+
+function tutorAvatarSVG() {
+  return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+    <defs><linearGradient id="tutorFaceGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd9b3"/><stop offset="1" stop-color="#f5b98a"/>
+    </linearGradient></defs>
+    <circle cx="50" cy="50" r="48" fill="url(#tutorFaceGrad)"/>
+    <path d="M14 42 Q18 8 50 8 Q82 8 86 42 Q84 24 50 22 Q16 24 14 42 Z" fill="#5b3a29"/>
+    <circle class="av-eye" cx="35" cy="45" r="4.5" fill="#2b2b3d"/>
+    <circle class="av-eye" cx="65" cy="45" r="4.5" fill="#2b2b3d"/>
+    <circle cx="28" cy="58" r="5" fill="#f2937c" opacity="0.45"/>
+    <circle cx="72" cy="58" r="5" fill="#f2937c" opacity="0.45"/>
+    <ellipse class="av-mouth" cx="50" cy="68" rx="10" ry="4" fill="#8c3b2a"/>
+  </svg>`;
+}
+
+function renderTutorSettings() {
+  const p = getTutorPrefs();
+  const voices = getItalianVoices();
+  const opts = voices.map(v =>
+    `<option value="${escapeHtml(v.name)}" ${v.name === p.voice ? 'selected' : ''}>${escapeHtml(v.name.replace(/Microsoft |Online \(Natural\) - Italian.*/g, '').trim() || v.name)}${/Natural/.test(v.name) ? ' ✦' : ''}</option>`
+  ).join('');
+  const lvlBtn = (id, label) =>
+    `<button class="tutor-lvl${p.level === id ? ' on' : ''}" onclick="setTutorPref('level','${id}')">${label}</button>`;
+  return `
+    <div class="tutor-settings">
+      <div class="tutor-set-row"><span>Level</span>
+        <div class="tutor-lvl-group">${lvlBtn('beginner','A1')}${lvlBtn('intermediate','A2–B1')}${lvlBtn('advanced','B1+')}</div>
+      </div>
+      <div class="tutor-set-row"><span>Voice</span>
+        <select class="tutor-voice-sel" onchange="setTutorPref('voice', this.value)">
+          <option value="">Auto (Italian)</option>${opts}
+        </select>
+      </div>
+      <div class="tutor-set-row"><span>Speak replies</span>
+        <input type="checkbox" ${p.autoSpeak ? 'checked' : ''} onchange="setTutorPref('autoSpeak', this.checked)">
+      </div>
+      <div class="tutor-set-row"><span>Whisper server</span>
+        <input type="text" class="tutor-key-input" style="max-width:55%" placeholder="http://localhost:8756 (optional)"
+          value="${escapeHtml(p.whisperUrl)}" onchange="setTutorPref('whisperUrl', this.value.trim())">
+      </div>
+      <div class="tutor-set-row">
+        <button class="tutor-end-btn" onclick="changeTutorKey()">Change API key</button>
+        <span class="tutor-set-hint">Level changes apply immediately</span>
+      </div>
+    </div>
+  `;
+}
+
+function toggleTutorSettings() {
+  state.tutorShowSettings = !state.tutorShowSettings;
+  render();
 }
 
 function renderTutorKeyScreen(app) {
@@ -2178,6 +2259,8 @@ function scrollTutorToBottom() {
 
 async function startTutorSession() {
   state.tutorSystem = buildTutorSystemPrompt();
+  // warm the voice list (some browsers populate it lazily)
+  if (window.speechSynthesis) speechSynthesis.getVoices();
   state.tutorMessages.push({
     role: 'user', hidden: true,
     content: '(The learner just opened the chat. Greet them and start the session.)',
@@ -2191,7 +2274,10 @@ async function sendTutorMessage() {
   const text = (input?.value || '').trim();
   if (!text) return;
   input.value = '';
-  state.tutorMessages.push({ role: 'user', content: text });
+  const spoken = state.tutorVoiceInput;
+  state.tutorVoiceInput = false;
+  state.tutorMessages.push(spoken ? { role: 'user', content: text, spoken: true }
+                                  : { role: 'user', content: text });
   await runTutorTurn();
 }
 
@@ -2201,13 +2287,14 @@ async function runTutorTurn() {
   try {
     const reply = await callTutorAPI();
     state.tutorMessages.push({ role: 'assistant', content: reply });
+    persistTutorSession();
+    if (getTutorPrefs().autoSpeak) tutorSpeak(reply);
   } catch (e) {
     state.tutorMessages.pop(); // drop the failed user turn so retry is clean
     showToast('Tutor error: ' + e.message);
   }
   state.tutorBusy = false;
   refreshTutorMsgs();
-  document.getElementById('tutor-input')?.focus();
 }
 
 async function endTutorSession() {
@@ -2221,6 +2308,7 @@ async function endTutorSession() {
     });
     state.tutorRecap = await callTutorAPI();
     state.tutorEnded = true;
+    persistTutorSession();
     addXP(5);
     showToast('+5 XP — sessione finita! 🎉');
   } catch (e) {
@@ -2232,16 +2320,154 @@ async function endTutorSession() {
 }
 
 function resetTutorSession(rerender = true) {
+  stopTutorMic();
+  window.speechSynthesis?.cancel();
   state.tutorMessages = [];
   state.tutorSystem = null;
   state.tutorRecap = null;
   state.tutorEnded = false;
   state.tutorBusy = false;
+  state.tutorVoiceInput = false;
+  localStorage.removeItem(TUTOR_SESSION_KEY);
   if (rerender) render();
 }
 
 function exitTutor() {
+  stopTutorMic();
+  window.speechSynthesis?.cancel();
   setTab('home');
+}
+
+/* ── Tutor prefs / persistence ─────────────────────────────── */
+function getTutorPrefs() {
+  return Object.assign(
+    { voice: '', level: 'beginner', whisperUrl: '', autoSpeak: true },
+    load(TUTOR_PREFS_KEY, {})
+  );
+}
+
+function setTutorPref(k, v) {
+  const p = getTutorPrefs();
+  p[k] = v;
+  save(TUTOR_PREFS_KEY, p);
+  if (k === 'level' && state.tutorSystem) {
+    state.tutorSystem = buildTutorSystemPrompt();
+    persistTutorSession();
+  }
+  render();
+}
+
+function persistTutorSession() {
+  save(TUTOR_SESSION_KEY, {
+    m: state.tutorMessages, s: state.tutorSystem,
+    r: state.tutorRecap, e: state.tutorEnded, t: Date.now(),
+  });
+}
+
+function restoreTutorSession() {
+  const s = load(TUTOR_SESSION_KEY, null);
+  if (s && Array.isArray(s.m) && s.m.length) {
+    state.tutorMessages = s.m;
+    state.tutorSystem   = s.s || buildTutorSystemPrompt();
+    state.tutorRecap    = s.r || null;
+    state.tutorEnded    = !!s.e;
+  }
+}
+
+/* ── Tutor TTS: chosen Italian voice + avatar lip-sync ─────── */
+function getItalianVoices() {
+  if (!window.speechSynthesis) return [];
+  return speechSynthesis.getVoices()
+    .filter(v => v.lang && v.lang.toLowerCase().startsWith('it'))
+    .sort((a, b) => (/Natural/.test(b.name) ? 1 : 0) - (/Natural/.test(a.name) ? 1 : 0));
+}
+
+function tutorSpeak(text) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'it-IT';
+  const p = getTutorPrefs();
+  const v = getItalianVoices().find(x => x.name === p.voice) || getItalianVoices()[0];
+  if (v) utt.voice = v;
+  utt.rate = 0.92;
+  utt.onstart = () => document.getElementById('tutor-avatar')?.classList.add('talking');
+  const stop  = () => document.getElementById('tutor-avatar')?.classList.remove('talking');
+  utt.onend = stop; utt.onerror = stop;
+  speechSynthesis.speak(utt);
+}
+
+/* ── Tutor STT: local whisper server, or browser fallback ──── */
+function toggleTutorMic() {
+  if (state.tutorRecording) { stopTutorMic(); return; }
+  const url = getTutorPrefs().whisperUrl;
+  if (url) startWhisperRec(url); else startBrowserRec();
+}
+
+function setMicUI(on) {
+  state.tutorRecording = on;
+  document.getElementById('tutor-mic')?.classList.toggle('rec', on);
+}
+
+function startBrowserRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('Speech recognition not available in this browser'); return; }
+  const rec = new SR();
+  rec.lang = 'it-IT';
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.onresult = e => {
+    const text = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
+    const input = document.getElementById('tutor-input');
+    if (input) input.value = text;
+    state.tutorVoiceInput = true;
+  };
+  rec.onend = () => { state.tutorRec = null; setMicUI(false); };
+  rec.onerror = ev => { showToast('Mic error: ' + ev.error); state.tutorRec = null; setMicUI(false); };
+  state.tutorRec = rec;
+  setMicUI(true);
+  rec.start();
+}
+
+async function startWhisperRec(url) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+    const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    const chunks = [];
+    mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    mr.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      setMicUI(false);
+      state.tutorMediaRec = null;
+      const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+      const fd = new FormData();
+      fd.append('file', blob, 'speech.webm');
+      showToast('Transcribing…');
+      try {
+        const r = await fetch(url.replace(/\/+$/, '') + '/transcribe', { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data?.error || `HTTP ${r.status}`);
+        const input = document.getElementById('tutor-input');
+        if (input) input.value = (data.text || '').trim();
+        state.tutorVoiceInput = true;
+      } catch (e) {
+        showToast('Whisper server error: ' + e.message + ' — falling back to browser mic next time or clear the URL in ⚙️');
+      }
+    };
+    state.tutorMediaRec = mr;
+    setMicUI(true);
+    mr.start();
+  } catch (e) {
+    showToast('Mic access denied: ' + e.message);
+  }
+}
+
+function stopTutorMic() {
+  try { state.tutorRec?.stop(); } catch {}
+  try { if (state.tutorMediaRec?.state === 'recording') state.tutorMediaRec.stop(); } catch {}
+  state.tutorRec = null;
+  setMicUI(false);
 }
 
 /* ── Navigation ──────────────────────────────────────────────── */
