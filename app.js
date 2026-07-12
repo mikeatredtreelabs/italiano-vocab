@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.5.1';
+const APP_VERSION = '2.6.0';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -2120,7 +2120,7 @@ function renderTutor(app) {
     ${state.tutorShowSettings ? renderTutorSettings() : ''}
     <div class="tutor-avatar-row">
       <div class="tutor-avatar" id="tutor-avatar">${tutorAvatarSVG()}</div>
-      <div class="tutor-avatar-name">Sofia</div>
+      <div class="tutor-avatar-name">${getTutorPrefs().avatar === 'sofia' ? 'Sofia' : 'Marco'}</div>
     </div>
     <div class="tutor-msgs" id="tutor-msgs">${renderTutorBubbles()}</div>
     ${state.tutorEnded ? `
@@ -2144,6 +2144,50 @@ function renderTutor(app) {
 }
 
 function tutorAvatarSVG() {
+  if (getTutorPrefs().avatar === 'sofia') return tutorAvatarSofia();
+  return tutorAvatarMarco();
+}
+
+/* Marco — original stylized male tutor bust */
+function tutorAvatarMarco() {
+  return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+    <defs>
+      <linearGradient id="avBgM" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+      </linearGradient>
+      <linearGradient id="avSkinM" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f3c29a"/><stop offset="1" stop-color="#e2a97e"/>
+      </linearGradient>
+      <clipPath id="avClipM"><circle cx="50" cy="50" r="48"/></clipPath>
+    </defs>
+    <circle cx="50" cy="50" r="48" fill="url(#avBgM)"/>
+    <g clip-path="url(#avClipM)">
+      <path d="M16 100 Q19 74 37 69 L63 69 Q81 74 84 100 Z" fill="#2c6e6a"/>
+      <path d="M44 69 L50 78 L56 69 L53 67 L47 67 Z" fill="#e9f2f1"/>
+      <path d="M44 56 h12 v13 q-6 4 -12 0 Z" fill="#d99a6c"/>
+      <g class="av-head">
+        <ellipse cx="33.5" cy="45" rx="3.2" ry="4" fill="url(#avSkinM)"/>
+        <ellipse cx="66.5" cy="45" rx="3.2" ry="4" fill="url(#avSkinM)"/>
+        <path d="M34 40 Q34 24 50 24 Q66 24 66 40 L66 48 Q66 62 50 63 Q34 62 34 48 Z" fill="url(#avSkinM)"/>
+        <path d="M37 55 Q43 62 50 62 Q57 62 63 55 L63 50 Q60 58 50 58 Q40 58 37 50 Z" fill="#3a2a20" opacity="0.16"/>
+        <path d="M32 44 Q30 20 50 17 Q70 20 68 44 Q68 32 62 29 Q56 25 47 28 Q45 23 41 27 Q33 32 32 44 Z" fill="#31241b"/>
+        <path d="M32 44 Q31 50 33 52 L34 42 Z" fill="#31241b"/>
+        <path d="M68 44 Q69 50 67 52 L66 42 Z" fill="#31241b"/>
+        <path d="M38.5 38.5 Q42.5 36.5 46.5 38.2" stroke="#31241b" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M53.5 38.2 Q57.5 36.5 61.5 38.5" stroke="#31241b" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle class="av-eye" cx="42.5" cy="43" r="2.5" fill="#2b2b3d"/>
+        <circle class="av-eye" cx="57.5" cy="43" r="2.5" fill="#2b2b3d"/>
+        <circle cx="43.3" cy="42.2" r="0.7" fill="#fff"/>
+        <circle cx="58.3" cy="42.2" r="0.7" fill="#fff"/>
+        <path d="M50 45 Q48.6 49.5 50.4 50.6" stroke="#c98a5e" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <ellipse class="av-mouth" cx="50" cy="55.5" rx="5" ry="2" fill="#8c3b2a"/>
+      </g>
+    </g>
+  </svg>`;
+}
+
+/* Sofia — the original tutor avatar */
+function tutorAvatarSofia() {
   return `<svg viewBox="0 0 100 100" width="100%" height="100%">
     <defs><linearGradient id="tutorFaceGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#ffd9b3"/><stop offset="1" stop-color="#f5b98a"/>
@@ -2166,8 +2210,13 @@ function renderTutorSettings() {
   ).join('');
   const lvlBtn = (id, label) =>
     `<button class="tutor-lvl${p.level === id ? ' on' : ''}" onclick="setTutorPref('level','${id}')">${label}</button>`;
+  const avBtn = (id, label) =>
+    `<button class="tutor-lvl${p.avatar === id ? ' on' : ''}" onclick="setTutorPref('avatar','${id}')">${label}</button>`;
   return `
     <div class="tutor-settings">
+      <div class="tutor-set-row"><span>Avatar</span>
+        <div class="tutor-lvl-group">${avBtn('marco','Marco')}${avBtn('sofia','Sofia')}</div>
+      </div>
       <div class="tutor-set-row"><span>Level</span>
         <div class="tutor-lvl-group">${lvlBtn('beginner','A1')}${lvlBtn('intermediate','A2–B1')}${lvlBtn('advanced','B1+')}</div>
       </div>
@@ -2341,7 +2390,7 @@ function exitTutor() {
 /* ── Tutor prefs / persistence ─────────────────────────────── */
 function getTutorPrefs() {
   return Object.assign(
-    { voice: '', level: 'beginner', whisperUrl: '', autoSpeak: true },
+    { voice: '', level: 'beginner', whisperUrl: '', autoSpeak: true, avatar: 'marco' },
     load(TUTOR_PREFS_KEY, {})
   );
 }

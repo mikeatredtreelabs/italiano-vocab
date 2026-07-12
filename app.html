@@ -1070,6 +1070,13 @@
       96%, 98% { transform: scaleY(0.08); }
     }
     .av-mouth { transform-box: fill-box; transform-origin: center; }
+    .av-head { transform-box: fill-box; transform-origin: 50% 85%; }
+    .tutor-avatar.talking .av-head { animation: avNod 1.8s infinite ease-in-out; }
+    @keyframes avNod {
+      0%, 100% { transform: rotate(0deg); }
+      30%      { transform: rotate(-2.2deg); }
+      65%      { transform: rotate(1.8deg); }
+    }
     .tutor-avatar.talking .av-mouth { animation: avTalk 0.28s infinite alternate ease-in-out; }
     @keyframes avTalk {
       from { transform: scaleY(0.5); }
