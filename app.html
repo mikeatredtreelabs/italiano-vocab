@@ -1059,9 +1059,18 @@
       display: flex; flex-direction: column; align-items: center;
       gap: 4px; padding: 8px 0 2px;
     }
-    .tutor-avatar { width: 72px; height: 72px; }
+    .tutor-avatar {
+      width: 112px; height: 112px; border-radius: 50%;
+      transition: box-shadow 0.35s ease;
+    }
+    .tutor-avatar.talking {
+      box-shadow: 0 0 0 4px rgba(139,92,246,0.22), 0 0 26px rgba(139,92,246,0.45);
+    }
+    .tutor-avatar.listening {
+      box-shadow: 0 0 0 4px rgba(221,51,51,0.20), 0 0 22px rgba(221,51,51,0.35);
+    }
     .tutor-avatar-name { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.4px; }
-    .av-eye {
+    .av-eyes {
       transform-box: fill-box; transform-origin: center;
       animation: avBlink 4.5s infinite;
     }
@@ -1069,6 +1078,26 @@
       0%, 94%, 100% { transform: scaleY(1); }
       96%, 98% { transform: scaleY(0.08); }
     }
+    .av-pupil { transform-box: fill-box; transform-origin: center; animation: avGaze 8s infinite ease-in-out; }
+    @keyframes avGaze {
+      0%, 38%, 100% { transform: translateX(0); }
+      42%, 55%      { transform: translateX(1.1px); }
+      60%, 63%      { transform: translateX(0); }
+      78%, 88%      { transform: translateX(-1px); }
+    }
+    .av-bust { transform-box: fill-box; transform-origin: 50% 100%; animation: avBreathe 3.8s infinite ease-in-out; }
+    @keyframes avBreathe {
+      0%, 100% { transform: scale(1) translateY(0); }
+      50%      { transform: scale(1.012) translateY(-0.5px); }
+    }
+    .av-brow { transform-box: fill-box; transform-origin: center; transition: transform 0.25s; }
+    .tutor-avatar.talking .av-brow { animation: avBrows 2.6s infinite ease-in-out; }
+    @keyframes avBrows {
+      0%, 60%, 100% { transform: translateY(0); }
+      66%, 78%      { transform: translateY(-1.1px); }
+    }
+    .tutor-avatar.listening .av-brow { transform: translateY(-1.2px); }
+    .tutor-avatar.listening .av-head { transform: rotate(3deg); transition: transform 0.4s ease; }
     .av-mouth { transform-box: fill-box; transform-origin: center; }
     .av-head { transform-box: fill-box; transform-origin: 50% 85%; }
     .tutor-avatar.talking .av-head { animation: avNod 1.8s infinite ease-in-out; }
@@ -1077,10 +1106,17 @@
       30%      { transform: rotate(-2.2deg); }
       65%      { transform: rotate(1.8deg); }
     }
-    .tutor-avatar.talking .av-mouth { animation: avTalk 0.28s infinite alternate ease-in-out; }
+    .tutor-avatar.talking .av-mouth { animation: avTalk 0.9s infinite ease-in-out; }
     @keyframes avTalk {
-      from { transform: scaleY(0.5); }
-      to   { transform: scaleY(2.1); }
+      0%   { transform: scaleY(1); }
+      12%  { transform: scaleY(3.2); }
+      24%  { transform: scaleY(1.6); }
+      38%  { transform: scaleY(3.8) scaleX(0.92); }
+      52%  { transform: scaleY(1.2); }
+      64%  { transform: scaleY(2.9); }
+      78%  { transform: scaleY(1.8) scaleX(1.05); }
+      90%  { transform: scaleY(3.4); }
+      100% { transform: scaleY(1); }
     }
     .tutor-mic {
       width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;

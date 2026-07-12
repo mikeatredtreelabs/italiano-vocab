@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.6.0';
+const APP_VERSION = '2.7.0';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -2151,55 +2151,137 @@ function tutorAvatarSVG() {
 /* Marco — original stylized male tutor bust */
 function tutorAvatarMarco() {
   return `<svg viewBox="0 0 100 100" width="100%" height="100%">
-    <defs>
-      <linearGradient id="avBgM" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
-      </linearGradient>
-      <linearGradient id="avSkinM" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#f3c29a"/><stop offset="1" stop-color="#e2a97e"/>
-      </linearGradient>
-      <clipPath id="avClipM"><circle cx="50" cy="50" r="48"/></clipPath>
-    </defs>
-    <circle cx="50" cy="50" r="48" fill="url(#avBgM)"/>
-    <g clip-path="url(#avClipM)">
-      <path d="M16 100 Q19 74 37 69 L63 69 Q81 74 84 100 Z" fill="#2c6e6a"/>
-      <path d="M44 69 L50 78 L56 69 L53 67 L47 67 Z" fill="#e9f2f1"/>
-      <path d="M44 56 h12 v13 q-6 4 -12 0 Z" fill="#d99a6c"/>
+  <defs>
+    <radialGradient id="bgM" cx="0.5" cy="0.35" r="0.9">
+      <stop offset="0" stop-color="#ffe0b0"/><stop offset="1" stop-color="#e08c5f"/>
+    </radialGradient>
+    <linearGradient id="skM" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6c89e"/><stop offset="1" stop-color="#dfa073"/>
+    </linearGradient>
+    <clipPath id="clM"><circle cx="50" cy="50" r="48"/></clipPath>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#bgM)"/>
+  <g clip-path="url(#clM)">
+    <circle cx="18" cy="26" r="7" fill="#fff" opacity="0.18"/>
+    <circle cx="84" cy="20" r="5" fill="#fff" opacity="0.15"/>
+    <circle cx="88" cy="44" r="4" fill="#fff" opacity="0.12"/>
+    <g class="av-bust">
+      <path d="M12 100 Q16 72 36 67 L64 67 Q84 72 88 100 Z" fill="#2c6e6a"/>
+      <path d="M64 67 Q84 72 88 100 L74 100 Q74 78 62 69 Z" fill="#235955"/>
+      <path d="M42 67 L50 79 L58 67 L54 64 L46 64 Z" fill="#f2f6f5"/>
+      <path d="M43 54 h14 v12 q-7 5 -14 0 Z" fill="#d6976a"/>
       <g class="av-head">
-        <ellipse cx="33.5" cy="45" rx="3.2" ry="4" fill="url(#avSkinM)"/>
-        <ellipse cx="66.5" cy="45" rx="3.2" ry="4" fill="url(#avSkinM)"/>
-        <path d="M34 40 Q34 24 50 24 Q66 24 66 40 L66 48 Q66 62 50 63 Q34 62 34 48 Z" fill="url(#avSkinM)"/>
-        <path d="M37 55 Q43 62 50 62 Q57 62 63 55 L63 50 Q60 58 50 58 Q40 58 37 50 Z" fill="#3a2a20" opacity="0.16"/>
-        <path d="M32 44 Q30 20 50 17 Q70 20 68 44 Q68 32 62 29 Q56 25 47 28 Q45 23 41 27 Q33 32 32 44 Z" fill="#31241b"/>
-        <path d="M32 44 Q31 50 33 52 L34 42 Z" fill="#31241b"/>
-        <path d="M68 44 Q69 50 67 52 L66 42 Z" fill="#31241b"/>
-        <path d="M38.5 38.5 Q42.5 36.5 46.5 38.2" stroke="#31241b" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M53.5 38.2 Q57.5 36.5 61.5 38.5" stroke="#31241b" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <circle class="av-eye" cx="42.5" cy="43" r="2.5" fill="#2b2b3d"/>
-        <circle class="av-eye" cx="57.5" cy="43" r="2.5" fill="#2b2b3d"/>
-        <circle cx="43.3" cy="42.2" r="0.7" fill="#fff"/>
-        <circle cx="58.3" cy="42.2" r="0.7" fill="#fff"/>
-        <path d="M50 45 Q48.6 49.5 50.4 50.6" stroke="#c98a5e" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-        <ellipse class="av-mouth" cx="50" cy="55.5" rx="5" ry="2" fill="#8c3b2a"/>
+        <ellipse cx="31.5" cy="43" rx="3.4" ry="4.4" fill="url(#skM)"/>
+        <ellipse cx="68.5" cy="43" rx="3.4" ry="4.4" fill="url(#skM)"/>
+        <ellipse cx="31.8" cy="43" rx="1.3" ry="2" fill="#c9895c"/>
+        <ellipse cx="68.2" cy="43" rx="1.3" ry="2" fill="#c9895c"/>
+        <path d="M32 38 Q32 20 50 19 Q68 20 68 38 L68 45 Q68 60 50 62 Q32 60 32 45 Z" fill="url(#skM)"/>
+        <path d="M36 52 Q42 60 50 60 Q58 60 64 52 L64 47 Q60 56 50 56.5 Q40 56 36 47 Z" fill="#4a3526" opacity="0.15"/>
+        <ellipse cx="38" cy="47" rx="3.4" ry="2" fill="#e98e6a" opacity="0.35"/>
+        <ellipse cx="62" cy="47" rx="3.4" ry="2" fill="#e98e6a" opacity="0.35"/>
+        <path d="M30 40 Q28 14 50 13 Q72 14 70 40 Q70 30 64 27 Q66 22 59 23 Q60 18 52 21 Q46 17 42 23 Q35 21 37 27 Q30 30 30 40 Z" fill="#2e2018"/>
+        <circle cx="36" cy="22" r="4.5" fill="#2e2018"/>
+        <circle cx="45" cy="18" r="5" fill="#2e2018"/>
+        <circle cx="55" cy="18" r="5" fill="#2e2018"/>
+        <circle cx="64" cy="22" r="4.5" fill="#2e2018"/>
+        <circle cx="30.5" cy="30" r="4" fill="#2e2018"/>
+        <circle cx="69.5" cy="30" r="4" fill="#2e2018"/>
+        <path d="M38 19 Q44 15 52 16" stroke="#4a3526" stroke-width="1.4" fill="none" opacity="0.7" stroke-linecap="round"/>
+        <path d="M58 18 Q64 19 67 24" stroke="#4a3526" stroke-width="1.2" fill="none" opacity="0.6" stroke-linecap="round"/>
+        <g class="av-brow">
+          <path d="M36.5 37.5 Q41 34.8 46 37" stroke="#2e2018" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <path d="M54 37 Q59 34.8 63.5 37.5" stroke="#2e2018" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </g>
+        <g class="av-eyes"><ellipse cx="41.5" cy="42.5" rx="3.6" ry="3" fill="#fff"/>
+        <ellipse cx="58.5" cy="42.5" rx="3.6" ry="3" fill="#fff"/>
+        <g class="av-pupil">
+          <circle cx="42" cy="42.8" r="2.1" fill="#5b3a1e"/>
+          <circle cx="42" cy="42.8" r="1" fill="#1c1310"/>
+          <circle cx="42.7" cy="42" r="0.55" fill="#fff"/>
+          <circle cx="59" cy="42.8" r="2.1" fill="#5b3a1e"/>
+          <circle cx="59" cy="42.8" r="1" fill="#1c1310"/>
+          <circle cx="59.7" cy="42" r="0.55" fill="#fff"/>
+        </g>
+        <g class="av-eye">
+          <path d="M38 40.6 Q41.5 38.6 45 40.4" stroke="#c9895c" stroke-width="0.9" fill="none"/>
+          <path d="M55 40.4 Q58.5 38.6 62 40.6" stroke="#c9895c" stroke-width="0.9" fill="none"/>
+        </g></g>
+        <path d="M50 43 Q48.2 49 50.6 50.4 Q51.8 51 52.4 50.2" stroke="#c9895c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M43 53.2 Q50 56.8 57 53.2" stroke="#8c4a34" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <ellipse class="av-mouth" cx="50" cy="54.6" rx="4.6" ry="1.1" fill="#7c2f22"/>
       </g>
     </g>
-  </svg>`;
+  </g>
+</svg>`;
 }
 
 /* Sofia — the original tutor avatar */
 function tutorAvatarSofia() {
   return `<svg viewBox="0 0 100 100" width="100%" height="100%">
-    <defs><linearGradient id="tutorFaceGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffd9b3"/><stop offset="1" stop-color="#f5b98a"/>
-    </linearGradient></defs>
-    <circle cx="50" cy="50" r="48" fill="url(#tutorFaceGrad)"/>
-    <path d="M14 42 Q18 8 50 8 Q82 8 86 42 Q84 24 50 22 Q16 24 14 42 Z" fill="#5b3a29"/>
-    <circle class="av-eye" cx="35" cy="45" r="4.5" fill="#2b2b3d"/>
-    <circle class="av-eye" cx="65" cy="45" r="4.5" fill="#2b2b3d"/>
-    <circle cx="28" cy="58" r="5" fill="#f2937c" opacity="0.45"/>
-    <circle cx="72" cy="58" r="5" fill="#f2937c" opacity="0.45"/>
-    <ellipse class="av-mouth" cx="50" cy="68" rx="10" ry="4" fill="#8c3b2a"/>
-  </svg>`;
+  <defs>
+    <radialGradient id="bgS" cx="0.5" cy="0.35" r="0.9">
+      <stop offset="0" stop-color="#f0e0fa"/><stop offset="1" stop-color="#b088e0"/>
+    </radialGradient>
+    <linearGradient id="skS" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fad4ae"/><stop offset="1" stop-color="#e8ad80"/>
+    </linearGradient>
+    <linearGradient id="hrS" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7d4526"/><stop offset="1" stop-color="#5e3018"/>
+    </linearGradient>
+    <clipPath id="clS"><circle cx="50" cy="50" r="48"/></clipPath>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#bgS)"/>
+  <g clip-path="url(#clS)">
+    <circle cx="16" cy="30" r="6" fill="#fff" opacity="0.2"/>
+    <circle cx="85" cy="22" r="4.5" fill="#fff" opacity="0.16"/>
+    <circle cx="88" cy="48" r="3.5" fill="#fff" opacity="0.12"/>
+    <g class="av-bust">
+      <path d="M26 100 Q26 76 34 66 L40 100 Z M74 100 Q74 76 66 66 L60 100 Z" fill="url(#hrS)"/>
+      <path d="M16 100 Q20 74 38 69 L62 69 Q80 74 84 100 Z" fill="#f4f2ef"/>
+      <path d="M42 69 Q50 76 58 69 L56 67 L44 67 Z" fill="#e2ded8"/>
+      <path d="M44 56 h12 v11 q-6 4.5 -12 0 Z" fill="#e2a172"/>
+      <path d="M20 100 Q18 70 30 56 L38 62 Q30 78 34 100 Z" fill="url(#hrS)"/>
+      <path d="M80 100 Q82 70 70 56 L62 62 Q70 78 66 100 Z" fill="url(#hrS)"/>
+      <g class="av-head">
+        <circle cx="33" cy="47" r="2.6" fill="none" stroke="#d4a03c" stroke-width="1.2"/>
+        <circle cx="67" cy="47" r="2.6" fill="none" stroke="#d4a03c" stroke-width="1.2"/>
+        <ellipse cx="33.5" cy="42" rx="3" ry="4" fill="url(#skS)"/>
+        <ellipse cx="66.5" cy="42" rx="3" ry="4" fill="url(#skS)"/>
+        <path d="M34 38 Q34 21 50 20 Q66 21 66 38 L66 44 Q66 58 50 61 Q34 58 34 44 Z" fill="url(#skS)"/>
+        <ellipse cx="39.5" cy="48" rx="3.2" ry="1.9" fill="#f0937e" opacity="0.45"/>
+        <ellipse cx="60.5" cy="48" rx="3.2" ry="1.9" fill="#f0937e" opacity="0.45"/>
+        <path d="M31 46 Q27 18 50 14 Q73 18 69 46 Q70 34 62 30 Q64 24 55 26 Q57 20 48 24 Q38 22 40 28 Q31 32 31 46 Z" fill="url(#hrS)"/>
+        <path d="M31 46 Q29 58 26 62 Q24 50 29 40 Z" fill="url(#hrS)"/>
+        <path d="M69 46 Q71 58 74 62 Q76 50 71 40 Z" fill="url(#hrS)"/>
+        <path d="M36 24 Q44 18 54 19" stroke="#9c5c33" stroke-width="1.4" fill="none" opacity="0.8" stroke-linecap="round"/>
+        <path d="M60 22 Q66 26 67 33" stroke="#9c5c33" stroke-width="1.2" fill="none" opacity="0.7" stroke-linecap="round"/>
+        <path d="M28 46 Q27 55 25 59" stroke="#9c5c33" stroke-width="1" fill="none" opacity="0.6" stroke-linecap="round"/>
+        <g class="av-brow">
+          <path d="M38 36.5 Q42 34.4 46 36.2" stroke="#5e3018" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <path d="M54 36.2 Q58 34.4 62 36.5" stroke="#5e3018" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </g>
+        <g class="av-eyes"><ellipse cx="42" cy="41.8" rx="3.5" ry="3" fill="#fff"/>
+        <ellipse cx="58" cy="41.8" rx="3.5" ry="3" fill="#fff"/>
+        <g class="av-pupil">
+          <circle cx="42.4" cy="42" r="2.1" fill="#8a6b3a"/>
+          <circle cx="42.4" cy="42" r="1" fill="#241a10"/>
+          <circle cx="43.1" cy="41.2" r="0.55" fill="#fff"/>
+          <circle cx="58.4" cy="42" r="2.1" fill="#8a6b3a"/>
+          <circle cx="58.4" cy="42" r="1" fill="#241a10"/>
+          <circle cx="59.1" cy="41.2" r="0.55" fill="#fff"/>
+        </g>
+        <g class="av-eye">
+          <path d="M38.5 39.8 Q42 37.8 45.5 39.6" stroke="#5e3018" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <path d="M54.5 39.6 Q58 37.8 61.5 39.8" stroke="#5e3018" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <path d="M37.8 39.2 L36.4 38.3 M62.2 39.2 L63.6 38.3" stroke="#5e3018" stroke-width="0.9" stroke-linecap="round"/>
+        </g></g>
+        <path d="M50 43.5 Q48.8 47.8 50.4 48.8" stroke="#d68f60" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M44.5 52.5 Q50 55.8 55.5 52.5" stroke="#b8524a" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse class="av-mouth" cx="50" cy="53.6" rx="3.9" ry="1" fill="#8c3030"/>
+      </g>
+    </g>
+  </g>
+</svg>`;
 }
 
 function renderTutorSettings() {
@@ -2456,6 +2538,7 @@ function toggleTutorMic() {
 function setMicUI(on) {
   state.tutorRecording = on;
   document.getElementById('tutor-mic')?.classList.toggle('rec', on);
+  document.getElementById('tutor-avatar')?.classList.toggle('listening', on);
 }
 
 function startBrowserRec() {
