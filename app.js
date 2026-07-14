@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Version ─────────────────────────────────────────────────── */
-const APP_VERSION = '2.9.0';
+const APP_VERSION = '2.10.0';
 
 /* ── Constants ──────────────────────────────────────────────── */
 const STORAGE_KEY   = 'sengeri-progress';
@@ -16,6 +16,7 @@ const STREAK_KEY    = 'sengeri-streak';
 const XP_KEY        = 'sengeri-xp';
 const ERRORS_KEY    = 'sengeri-errors';   // NEW: per-word error counts
 const SEEN_KEY      = 'sengeri-seen';     // NEW: per-word seen dates
+const KNOWN_KEY     = 'sengeri-known';    // wordKey → { it, en, date } (perfect Daily Quiz rounds)
 const TUTOR_KEY     = 'sengeri-tutor-key';     // Anthropic API key (device-local only)
 const TUTOR_PREFS_KEY   = 'sengeri-tutor-prefs';   // voice, level, whisper URL, auto-speak
 const TUTOR_PHOTO_KEY   = 'sengeri-tutor-photo';   // custom avatar photo (data URL, never synced)
@@ -54,6 +55,7 @@ let state = {
   progress:     {},          // wordKey → { bucket, lastSeen }
   errors:       {},          // wordKey → count
   seen:         {},          // wordKey → ISO date string
+  known:        {},          // wordKey → { it, en, date } — earned via perfect Daily Quiz
   settings:     { ipa: true, autoSpeak: false, showEn: false },
   theme:        'dark',
   streak:       { count: 0, lastDate: null },
@@ -95,6 +97,7 @@ let state = {
   dailyFlipped: false,
   dailyRight:   0,
   dailyWrong:   0,
+  dailyNewKnown: 0,
   // review
   reviewMode:   false,
   reviewWordIds:[],
@@ -121,6 +124,7 @@ function loadPersisted() {
   state.progress = load(STORAGE_KEY, {});
   state.errors   = load(ERRORS_KEY, {});
   state.seen     = load(SEEN_KEY, {});
+  state.known    = load(KNOWN_KEY, {});
   state.settings = { ...state.settings, ...load(SETTINGS_KEY, {}) };
   state.streak   = load(STREAK_KEY, { count: 0, lastDate: null });
   state.xp       = load(XP_KEY, 0);
@@ -131,6 +135,7 @@ function savePersisted() {
   save(STORAGE_KEY, state.progress);
   save(ERRORS_KEY,  state.errors);
   save(SEEN_KEY,    state.seen);
+  save(KNOWN_KEY,   state.known);
   save(SETTINGS_KEY, state.settings);
   save(STREAK_KEY,  state.streak);
   save(XP_KEY,      state.xp);
@@ -506,6 +511,7 @@ async function renderHome(app) {
       <div class="stat-pill"><span class="stat-num">${state.streak.count}</span><span class="stat-lbl">🔥 streak</span></div>
       <div class="stat-pill"><span class="stat-num">${state.xp}</span><span class="stat-lbl">⭐ XP</span></div>
       <div class="stat-pill"><span class="stat-num">${Object.keys(state.progress).length}</span><span class="stat-lbl">📚 studied</span></div>
+      <button class="stat-pill stat-pill-btn" onclick="showKnownWords()"><span class="stat-num">${Object.keys(state.known).length}</span><span class="stat-lbl">✅ known</span></button>
     </div>
 
     ${dueCount > 0 ? `
@@ -892,7 +898,29 @@ function gradeDaily(correct) {
   if (!word._verb) recordResult(word._packId, word, correct);
   state.dailyIdx++;
   state.dailyFlipped = false;
+  // Perfect round complete → these words officially join "Words I Know"
+  if (state.dailyIdx >= state.dailyQueue.length && state.dailyWrong === 0) {
+    state.dailyNewKnown = recordDailyKnown();
+  }
   render();
+}
+
+/* Add all (non-verb) words from the finished daily round to the known
+   set. Idempotent — already-known words are skipped. Returns how many
+   were newly added. */
+function recordDailyKnown() {
+  let added = 0;
+  const today = todayStr();
+  for (const w of state.dailyQueue) {
+    if (w._verb) continue;
+    const k = wordKey(w._packId, w);
+    if (!state.known[k]) {
+      state.known[k] = { it: w.it, en: w.en, date: today };
+      added++;
+    }
+  }
+  if (added > 0) savePersisted();
+  return added;
 }
 
 function renderDailyScore(app) {
@@ -910,7 +938,10 @@ function renderDailyScore(app) {
       <div class="score-sub">✅ ${right} right · ❌ ${wrong} wrong</div>
       <div class="score-meter"><div class="score-meter-fill" style="width:${pct}%"></div></div>
       ${perfect
-        ? `<div class="score-detail">You nailed all 10 words and the verb challenge. Ready for a fresh set?</div>
+        ? `<div class="known-earned">✅ ${state.dailyNewKnown > 0
+              ? `${state.dailyNewKnown} word${state.dailyNewKnown !== 1 ? 's' : ''} added to <b>Words I Know</b> (${Object.keys(state.known).length} total)`
+              : `All 10 already in <b>Words I Know</b> (${Object.keys(state.known).length} total)`}</div>
+           <div class="score-detail">You nailed all 10 words and the verb challenge. Ready for a fresh set?</div>
            <div class="score-actions">
              <button class="primary-btn" onclick="newDailyRound()">✨ 10 New Words</button>
              <button class="secondary-btn" onclick="quitDaily()">Done</button>
@@ -1945,6 +1976,42 @@ function showAboutSheet() {
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
+/* ── Words I Know sheet ─────────────────────────────────────── */
+function showKnownWords() {
+  const entries = Object.values(state.known)
+    .sort((a, b) => a.it.localeCompare(b.it, 'it'));
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal about-modal">
+      <div class="modal-header">
+        <span class="modal-emoji">✅</span>
+        <div>
+          <h2>Words I Know</h2>
+          <div class="modal-subtitle">${entries.length} word${entries.length !== 1 ? 's' : ''} earned from perfect Daily Quiz rounds</div>
+        </div>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+      </div>
+      ${entries.length === 0
+        ? `<div class="known-empty">
+             <div class="known-empty-emoji">🎴</div>
+             <p>No words yet! Get all 11 cards right in a <b>Daily Quiz</b> and those 10 words are added here.</p>
+           </div>`
+        : `<div class="known-list">
+             ${entries.map(w => `
+               <div class="known-row">
+                 <button class="speak-mini" onclick="speak('${w.it.replace(/'/g, "\\'")}')">🔊</button>
+                 <span class="known-it">${w.it}</span>
+                 <span class="known-en">${w.en}</span>
+               </div>
+             `).join('')}
+           </div>`}
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
 function toggleThemeFromSheet(row) {
   toggleTheme();
   const icon = row.querySelector('.about-row-icon');
@@ -2011,7 +2078,9 @@ function resetAllProgress() {
   localStorage.removeItem(SEEN_KEY);
   localStorage.removeItem(STREAK_KEY);
   localStorage.removeItem(XP_KEY);
+  localStorage.removeItem(KNOWN_KEY);
   state.progress = {};
+  state.known    = {};
   state.errors   = {};
   state.seen     = {};
   state.streak   = { count: 0, lastDate: null };
